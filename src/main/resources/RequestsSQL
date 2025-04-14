@@ -1,0 +1,62 @@
+-- Таблица для пользователей
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    bio TEXT,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    last_login TIMESTAMP,
+    date_joined TIMESTAMP NOT NULL
+);
+
+-- Таблица для проектов
+CREATE TABLE projects (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT
+);
+
+-- Таблица для связи пользователей и проектов (m:m)
+CREATE TABLE project_users (
+    project_id INT REFERENCES projects(id) ON DELETE CASCADE,
+    user_id INT REFERENCES users(id) ON DELETE CASCADE,
+    PRIMARY KEY (project_id, user_id)
+);
+
+-- Таблица для спринтов
+CREATE TABLE sprints (
+    id SERIAL PRIMARY KEY,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    project_id INT REFERENCES projects(id) ON DELETE CASCADE
+);
+
+-- Таблица для задач
+CREATE TABLE tasks (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    status VARCHAR(20) NOT NULL, -- TODO, IN_PROGRESS, DONE
+    priority INT NOT NULL,
+    sprint_id INT REFERENCES sprints(id) ON DELETE CASCADE,
+    assigned_user_id INT REFERENCES users(id) ON DELETE SET NULL
+);
+
+-- Таблица для ретроспектив
+CREATE TABLE retrospectives (
+    id SERIAL PRIMARY KEY,
+    sprint_id INT UNIQUE REFERENCES sprints(id) ON DELETE CASCADE,
+    summary TEXT NOT NULL
+);
+
+-- Таблица для improvements (List<String>)
+CREATE TABLE retrospective_improvements (
+    retrospective_id INT REFERENCES retrospectives(id) ON DELETE CASCADE,
+    improvement TEXT NOT NULL
+);
+
+-- Таблица для positives (List<String>)
+CREATE TABLE retrospective_positives (
+    retrospective_id INT REFERENCES retrospectives(id) ON DELETE CASCADE,
+    positive TEXT NOT NULL
+);

@@ -1,0 +1,61 @@
+2025-04-14 22:44:58 [INFO] UserDAO - findByEmail [1] Начало выполнения метода
+2025-04-14 22:44:58 [DEBUG] UserDAO - findByEmail [1] Параметры метода: email: sumchenko@mail.ru
+2025-04-14 22:44:59 [INFO] DatabaseConfig - DatabaseConfig [1] Loaded database properties successfully
+2025-04-14 22:44:59 [INFO] DatabaseConfig - getConnection [1] Начало выполнения метода
+2025-04-14 22:44:59 [DEBUG] DatabaseConfig - getConnection [1] Параметры метода: Establishing new connection
+2025-04-14 22:44:59 [INFO] DatabaseConfig - getConnection [2] Выполнение операции с базой данных
+2025-04-14 22:44:59 [DEBUG] DatabaseConfig - getConnection [2] Детали операции с базой данных: Connection established with URL: jdbc:postgresql://localhost:5432/AgileFlow
+2025-04-14 22:44:59 [INFO] DatabaseConfig - getConnection [3] Метод успешно завершен
+2025-04-14 22:44:59 [INFO] UserDAO - findByEmail [2] Выполнение операции с базой данных
+2025-04-14 22:44:59 [DEBUG] UserDAO - findByEmail [2] Детали операции с базой данных: Запрос выполнен
+2025-04-14 22:44:59 [INFO] UserDAO - findByEmail [3] Метод успешно завершен
+2025-04-14 22:45:30 [INFO] UserDAO - findByEmail [1] Начало выполнения метода
+2025-04-14 22:45:30 [DEBUG] UserDAO - findByEmail [1] Параметры метода: email: vladimir@mail.ru
+2025-04-14 22:45:30 [INFO] DatabaseConfig - getConnection [1] Начало выполнения метода
+2025-04-14 22:45:30 [DEBUG] DatabaseConfig - getConnection [1] Параметры метода: Establishing new connection
+2025-04-14 22:45:30 [INFO] DatabaseConfig - getConnection [2] Выполнение операции с базой данных
+2025-04-14 22:45:30 [DEBUG] DatabaseConfig - getConnection [2] Детали операции с базой данных: Connection established with URL: jdbc:postgresql://localhost:5432/AgileFlow
+2025-04-14 22:45:30 [INFO] DatabaseConfig - getConnection [3] Метод успешно завершен
+2025-04-14 22:45:30 [INFO] UserDAO - findByEmail [2] Выполнение операции с базой данных
+2025-04-14 22:45:30 [DEBUG] UserDAO - findByEmail [2] Детали операции с базой данных: Запрос выполнен
+2025-04-14 22:45:30 [INFO] UserDAO - findByEmail [3] Метод успешно завершен
+2025-04-14 22:45:30 [INFO] UserDAO - create [1] Начало выполнения метода
+2025-04-14 22:45:30 [DEBUG] UserDAO - create [1] Параметры метода: User{id=0, name='��������', email='vladimir@mail.ru', bio='Student', isActive=true, lastLogin=null, dateJoined=Mon Apr 14 22:45:30 MSK 2025}
+2025-04-14 22:45:30 [INFO] DatabaseConfig - getConnection [1] Начало выполнения метода
+2025-04-14 22:45:30 [DEBUG] DatabaseConfig - getConnection [1] Параметры метода: Establishing new connection
+2025-04-14 22:45:30 [INFO] DatabaseConfig - getConnection [2] Выполнение операции с базой данных
+2025-04-14 22:45:30 [DEBUG] DatabaseConfig - getConnection [2] Детали операции с базой данных: Connection established with URL: jdbc:postgresql://localhost:5432/AgileFlow
+2025-04-14 22:45:30 [INFO] DatabaseConfig - getConnection [3] Метод успешно завершен
+2025-04-14 22:45:30 [INFO] UserDAO - create [2] Выполнение операции с базой данных
+2025-04-14 22:45:30 [DEBUG] UserDAO - create [2] Детали операции с базой данных: Затронуто строк: 1
+2025-04-14 22:45:30 [INFO] UserDAO - create [3] Метод успешно завершен
+2025-04-14 22:45:45 [INFO] UserDAO - findByEmail [1] Начало выполнения метода
+2025-04-14 22:45:45 [DEBUG] UserDAO - findByEmail [1] Параметры метода: email: vladimir@mail.ru
+2025-04-14 22:45:45 [INFO] DatabaseConfig - getConnection [1] Начало выполнения метода
+2025-04-14 22:45:45 [DEBUG] DatabaseConfig - getConnection [1] Параметры метода: Establishing new connection
+2025-04-14 22:45:45 [INFO] DatabaseConfig - getConnection [2] Выполнение операции с базой данных
+2025-04-14 22:45:45 [DEBUG] DatabaseConfig - getConnection [2] Детали операции с базой данных: Connection established with URL: jdbc:postgresql://localhost:5432/AgileFlow
+2025-04-14 22:45:45 [INFO] DatabaseConfig - getConnection [3] Метод успешно завершен
+2025-04-14 22:45:45 [INFO] UserDAO - findByEmail [2] Выполнение операции с базой данных
+2025-04-14 22:45:45 [DEBUG] UserDAO - findByEmail [2] Детали операции с базой данных: Запрос выполнен
+2025-04-14 22:45:45 [INFO] UserDAO - findByEmail [3] Метод успешно завершен
+2025-04-14 22:45:45 [INFO] UserDAO - update [1] Начало выполнения метода
+2025-04-14 22:45:45 [DEBUG] UserDAO - update [1] Параметры метода: User{id=97, name='��������', email='vladimir@mail.ru', bio='Student', isActive=true, lastLogin=Mon Apr 14 22:45:45 MSK 2025, dateJoined=2025-04-14 22:45:30.082}
+2025-04-14 22:45:45 [INFO] DatabaseConfig - getConnection [1] Начало выполнения метода
+2025-04-14 22:45:45 [DEBUG] DatabaseConfig - getConnection [1] Параметры метода: Establishing new connection
+2025-04-14 22:45:45 [INFO] DatabaseConfig - getConnection [2] Выполнение операции с базой данных
+2025-04-14 22:45:45 [DEBUG] DatabaseConfig - getConnection [2] Детали операции с базой данных: Connection established with URL: jdbc:postgresql://localhost:5432/AgileFlow
+2025-04-14 22:45:45 [INFO] DatabaseConfig - getConnection [3] Метод успешно завершен
+2025-04-14 22:45:45 [INFO] UserDAO - update [2] Выполнение операции с базой данных
+2025-04-14 22:45:45 [DEBUG] UserDAO - update [2] Детали операции с базой данных: Затронуто строк: 1
+2025-04-14 22:45:45 [INFO] UserDAO - update [3] Метод успешно завершен
+2025-04-14 22:45:57 [INFO] UserDAO - findByEmail [1] Начало выполнения метода
+2025-04-14 22:45:57 [DEBUG] UserDAO - findByEmail [1] Параметры метода: email: sumchenko@mail.ru
+2025-04-14 22:45:57 [INFO] DatabaseConfig - getConnection [1] Начало выполнения метода
+2025-04-14 22:45:57 [DEBUG] DatabaseConfig - getConnection [1] Параметры метода: Establishing new connection
+2025-04-14 22:45:57 [INFO] DatabaseConfig - getConnection [2] Выполнение операции с базой данных
+2025-04-14 22:45:57 [DEBUG] DatabaseConfig - getConnection [2] Детали операции с базой данных: Connection established with URL: jdbc:postgresql://localhost:5432/AgileFlow
+2025-04-14 22:45:57 [INFO] DatabaseConfig - getConnection [3] Метод успешно завершен
+2025-04-14 22:45:57 [INFO] UserDAO - findByEmail [2] Выполнение операции с базой данных
+2025-04-14 22:45:57 [DEBUG] UserDAO - findByEmail [2] Детали операции с базой данных: Запрос выполнен
+2025-04-14 22:45:57 [INFO] UserDAO - findByEmail [3] Метод успешно завершен
