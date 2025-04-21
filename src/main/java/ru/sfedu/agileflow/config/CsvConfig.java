@@ -21,7 +21,7 @@ import java.util.Optional;
  */
 public class CsvConfig {
     private static final Logger log = Logger.getLogger(CsvConfig.class);
-    private static final String CSV_DIR = "src/main/resources/dataCSV";
+    private static final String CSV_DIR = "data/csv";
 
     // Определение заголовков для каждого CSV-файла
     private static final Map<String, String[]> CSV_HEADERS = new HashMap<>();

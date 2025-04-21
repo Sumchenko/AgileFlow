@@ -24,7 +24,7 @@ public class SprintCsvDAOTest {
     private static final Logger log = Logger.getLogger(SprintCsvDAOTest.class);
     private SprintCsvDAO sprintDAO;
     private ProjectCsvDAO projectDAO;
-    private static final String CSV_DIR = "src/main/resources/dataCSV";
+    private static final String CSV_DIR = "data/csv";
 
     @Before
     public void setUp() {

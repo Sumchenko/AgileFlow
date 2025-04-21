@@ -21,7 +21,7 @@ import static org.junit.Assert.*;
 public class UserCsvDAOTest {
     private static final Logger log = Logger.getLogger(UserCsvDAOTest.class);
     private UserCsvDAO userDAO;
-    private static final String CSV_DIR = "src/main/resources/dataCSV";
+    private static final String CSV_DIR = "data/csv";
 
     @Before
     public void setUp() {
