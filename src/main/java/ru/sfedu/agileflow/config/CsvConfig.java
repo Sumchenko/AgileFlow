@@ -1,4 +1,4 @@
-package ru.sfedu.agileflow.utils;
+package ru.sfedu.agileflow.config;
 
 import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
@@ -19,8 +19,8 @@ import java.util.Optional;
 /**
  * Утилитный класс для работы с CSV-файлами.
  */
-public class CsvUtil {
-    private static final Logger log = Logger.getLogger(CsvUtil.class);
+public class CsvConfig {
+    private static final Logger log = Logger.getLogger(CsvConfig.class);
     private static final String CSV_DIR = "src/main/resources/dataCSV";
 
     // Определение заголовков для каждого CSV-файла

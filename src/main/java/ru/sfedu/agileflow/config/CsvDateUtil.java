@@ -1,4 +1,4 @@
-package ru.sfedu.agileflow.utils;
+package ru.sfedu.agileflow.config;
 
 import org.apache.log4j.Logger;
 import ru.sfedu.agileflow.constants.Constants;
@@ -10,8 +10,8 @@ import java.util.Date;
 /**
  * Утилитный класс для работы с датами в CSV.
  */
-public class DateUtil {
-    private static final Logger log = Logger.getLogger(DateUtil.class);
+public class CsvDateUtil {
+    private static final Logger log = Logger.getLogger(CsvDateUtil.class);
     private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd");
     private static final SimpleDateFormat TIMESTAMP_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
