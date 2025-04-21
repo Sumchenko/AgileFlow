@@ -1,28 +1,41 @@
 package ru.sfedu.agileflow.models;
 
 import jakarta.persistence.*;
+import jakarta.xml.bind.annotation.*;
 import java.util.List;
 
 @Entity
 @Table(name = "retrospectives")
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.FIELD)
 public class Retrospective {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @XmlAttribute
     private int id;
 
     @OneToOne
     @JoinColumn(name = "sprint_id")
+    @XmlElement
     private Sprint sprint;
 
+    @XmlElement
     private String summary;
 
     @ElementCollection
+    @CollectionTable(name = "retrospective_improvements", joinColumns = @JoinColumn(name = "retrospective_id"))
+    @Column(name = "improvement")
+    @XmlElementWrapper(name = "improvements")
+    @XmlElement(name = "improvement")
     private List<String> improvements;
 
     @ElementCollection
+    @CollectionTable(name = "retrospective_positives", joinColumns = @JoinColumn(name = "retrospective_id"))
+    @Column(name = "positive")
+    @XmlElementWrapper(name = "positives")
+    @XmlElement(name = "positive")
     private List<String> positives;
 
-    // Конструкторы
     public Retrospective() {}
 
     public Retrospective(Sprint sprint, String summary, List<String> improvements, List<String> positives) {
@@ -70,5 +83,16 @@ public class Retrospective {
 
     public void setPositives(List<String> positives) {
         this.positives = positives;
+    }
+
+    @Override
+    public String toString() {
+        return "Retrospective{" +
+                "id=" + id +
+                ", sprintId=" + (sprint != null ? sprint.getId() : null) +
+                ", summary='" + summary + '\'' +
+                ", improvements=" + improvements +
+                ", positives=" + positives +
+                '}';
     }
 }

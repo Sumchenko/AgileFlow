@@ -1,21 +1,20 @@
 package ru.sfedu.agileflow.dao;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
 import org.apache.log4j.Logger;
 import ru.sfedu.agileflow.config.DatabaseConfig;
 import ru.sfedu.agileflow.constants.Constants;
 import ru.sfedu.agileflow.models.Retrospective;
-import ru.sfedu.agileflow.models.Sprint;
 
-import java.sql.*;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * DAO-класс для управления ретроспективами в базе данных.
  */
 public class RetrospectiveDAO implements GenericDAO<Retrospective, Integer> {
     private static final Logger log = Logger.getLogger(RetrospectiveDAO.class);
-    private final SprintDAO sprintDAO = new SprintDAO();
 
     /**
      * Создает новую ретроспективу в базе данных.
@@ -27,44 +26,14 @@ public class RetrospectiveDAO implements GenericDAO<Retrospective, Integer> {
         log.info(String.format(Constants.LOG_METHOD_START, methodName));
         log.debug(String.format(Constants.LOG_METHOD_DEBUG, methodName, retrospective.toString()));
 
-        String sql = "INSERT INTO retrospectives (sprint_id, summary) VALUES (?, ?)";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            stmt.setInt(1, retrospective.getSprint().getId());
-            stmt.setString(2, retrospective.getSummary());
-
+        try (EntityManager em = DatabaseConfig.getEntityManager()) {
+            em.getTransaction().begin();
             log.info(String.format(Constants.LOG_DB_OPERATION, methodName));
-            int rowsAffected = stmt.executeUpdate();
-            log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Rows affected: " + rowsAffected));
-
-            try (ResultSet rs = stmt.getGeneratedKeys()) {
-                if (rs.next()) {
-                    retrospective.setId(rs.getInt(1));
-                }
-            }
-
-            // Сохранение improvements
-            String sqlImprovements = "INSERT INTO retrospective_improvements (retrospective_id, improvement) VALUES (?, ?)";
-            try (PreparedStatement stmtImprovements = conn.prepareStatement(sqlImprovements)) {
-                for (String improvement : retrospective.getImprovements()) {
-                    stmtImprovements.setInt(1, retrospective.getId());
-                    stmtImprovements.setString(2, improvement);
-                    stmtImprovements.executeUpdate();
-                }
-            }
-
-            // Сохранение positives
-            String sqlPositives = "INSERT INTO retrospective_positives (retrospective_id, positive) VALUES (?, ?)";
-            try (PreparedStatement stmtPositives = conn.prepareStatement(sqlPositives)) {
-                for (String positive : retrospective.getPositives()) {
-                    stmtPositives.setInt(1, retrospective.getId());
-                    stmtPositives.setString(2, positive);
-                    stmtPositives.executeUpdate();
-                }
-            }
-
+            em.persist(retrospective);
+            em.getTransaction().commit();
+            log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Retrospective persisted with ID: " + retrospective.getId()));
             log.info(String.format(Constants.LOG_METHOD_END, methodName));
-        } catch (SQLException e) {
+        } catch (Exception e) {
             log.error(String.format(Constants.LOG_ERROR, methodName, e.getMessage()));
             throw new RuntimeException("Failed to create retrospective", e);
         }
@@ -73,62 +42,21 @@ public class RetrospectiveDAO implements GenericDAO<Retrospective, Integer> {
     /**
      * Находит ретроспективу по идентификатору.
      * @param id Идентификатор ретроспективы
-     * @return Ретроспектива или null, если не найдена
+     * @return Optional с ретроспективой, если найдена, иначе пустой Optional
      */
     @Override
-    public Retrospective findById(Integer id) {
+    public Optional<Retrospective> findById(Integer id) {
         String methodName = "findById";
         log.info(String.format(Constants.LOG_METHOD_START, methodName));
         log.debug(String.format(Constants.LOG_METHOD_DEBUG, methodName, "id: " + id));
 
-        String sql = "SELECT * FROM retrospectives WHERE id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, id);
-
+        try (EntityManager em = DatabaseConfig.getEntityManager()) {
             log.info(String.format(Constants.LOG_DB_OPERATION, methodName));
-            try (ResultSet rs = stmt.executeQuery()) {
-                log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Query executed"));
-                if (rs.next()) {
-                    Retrospective retrospective = new Retrospective();
-                    retrospective.setId(rs.getInt("id"));
-                    Sprint sprint = sprintDAO.findById(rs.getInt("sprint_id"));
-                    retrospective.setSprint(sprint);
-                    retrospective.setSummary(rs.getString("summary"));
-
-                    // Загрузка improvements
-                    String sqlImprovements = "SELECT improvement FROM retrospective_improvements WHERE retrospective_id = ?";
-                    try (PreparedStatement stmtImprovements = conn.prepareStatement(sqlImprovements)) {
-                        stmtImprovements.setInt(1, id);
-                        try (ResultSet rsImprovements = stmtImprovements.executeQuery()) {
-                            List<String> improvements = new ArrayList<>();
-                            while (rsImprovements.next()) {
-                                improvements.add(rsImprovements.getString("improvement"));
-                            }
-                            retrospective.setImprovements(improvements);
-                        }
-                    }
-
-                    // Загрузка positives
-                    String sqlPositives = "SELECT positive FROM retrospective_positives WHERE retrospective_id = ?";
-                    try (PreparedStatement stmtPositives = conn.prepareStatement(sqlPositives)) {
-                        stmtPositives.setInt(1, id);
-                        try (ResultSet rsPositives = stmtPositives.executeQuery()) {
-                            List<String> positives = new ArrayList<>();
-                            while (rsPositives.next()) {
-                                positives.add(rsPositives.getString("positive"));
-                            }
-                            retrospective.setPositives(positives);
-                        }
-                    }
-
-                    log.info(String.format(Constants.LOG_METHOD_END, methodName));
-                    return retrospective;
-                }
-            }
+            Retrospective retrospective = em.find(Retrospective.class, id);
+            log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, retrospective != null ? "Retrospective found" : "Retrospective not found"));
             log.info(String.format(Constants.LOG_METHOD_END, methodName));
-            return null;
-        } catch (SQLException e) {
+            return Optional.ofNullable(retrospective);
+        } catch (Exception e) {
             log.error(String.format(Constants.LOG_ERROR, methodName, e.getMessage()));
             throw new RuntimeException("Failed to find retrospective by id", e);
         }
@@ -143,51 +71,14 @@ public class RetrospectiveDAO implements GenericDAO<Retrospective, Integer> {
         String methodName = "findAll";
         log.info(String.format(Constants.LOG_METHOD_START, methodName));
 
-        List<Retrospective> retrospectives = new ArrayList<>();
-        String sql = "SELECT * FROM retrospectives";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+        try (EntityManager em = DatabaseConfig.getEntityManager()) {
             log.info(String.format(Constants.LOG_DB_OPERATION, methodName));
-            while (rs.next()) {
-                Retrospective retrospective = new Retrospective();
-                retrospective.setId(rs.getInt("id"));
-                Sprint sprint = sprintDAO.findById(rs.getInt("sprint_id"));
-                retrospective.setSprint(sprint);
-                retrospective.setSummary(rs.getString("summary"));
-
-                // Загрузка improvements
-                String sqlImprovements = "SELECT improvement FROM retrospective_improvements WHERE retrospective_id = ?";
-                try (PreparedStatement stmtImprovements = conn.prepareStatement(sqlImprovements)) {
-                    stmtImprovements.setInt(1, retrospective.getId());
-                    try (ResultSet rsImprovements = stmtImprovements.executeQuery()) {
-                        List<String> improvements = new ArrayList<>();
-                        while (rsImprovements.next()) {
-                            improvements.add(rsImprovements.getString("improvement"));
-                        }
-                        retrospective.setImprovements(improvements);
-                    }
-                }
-
-                // Загрузка positives
-                String sqlPositives = "SELECT positive FROM retrospective_positives WHERE retrospective_id = ?";
-                try (PreparedStatement stmtPositives = conn.prepareStatement(sqlPositives)) {
-                    stmtPositives.setInt(1, retrospective.getId());
-                    try (ResultSet rsPositives = stmtPositives.executeQuery()) {
-                        List<String> positives = new ArrayList<>();
-                        while (rsPositives.next()) {
-                            positives.add(rsPositives.getString("positive"));
-                        }
-                        retrospective.setPositives(positives);
-                    }
-                }
-
-                retrospectives.add(retrospective);
-            }
+            TypedQuery<Retrospective> query = em.createQuery("SELECT r FROM Retrospective r", Retrospective.class);
+            List<Retrospective> retrospectives = query.getResultList();
             log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Found " + retrospectives.size() + " retrospectives"));
             log.info(String.format(Constants.LOG_METHOD_END, methodName));
             return retrospectives;
-        } catch (SQLException e) {
+        } catch (Exception e) {
             log.error(String.format(Constants.LOG_ERROR, methodName, e.getMessage()));
             throw new RuntimeException("Failed to retrieve all retrospectives", e);
         }
@@ -203,51 +94,14 @@ public class RetrospectiveDAO implements GenericDAO<Retrospective, Integer> {
         log.info(String.format(Constants.LOG_METHOD_START, methodName));
         log.debug(String.format(Constants.LOG_METHOD_DEBUG, methodName, retrospective.toString()));
 
-        String sql = "UPDATE retrospectives SET sprint_id = ?, summary = ? WHERE id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, retrospective.getSprint().getId());
-            stmt.setString(2, retrospective.getSummary());
-            stmt.setInt(3, retrospective.getId());
-
+        try (EntityManager em = DatabaseConfig.getEntityManager()) {
+            em.getTransaction().begin();
             log.info(String.format(Constants.LOG_DB_OPERATION, methodName));
-            int rowsAffected = stmt.executeUpdate();
-            log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Rows affected: " + rowsAffected));
-
-            // Обновление improvements
-            String sqlDeleteImprovements = "DELETE FROM retrospective_improvements WHERE retrospective_id = ?";
-            try (PreparedStatement stmtDelete = conn.prepareStatement(sqlDeleteImprovements)) {
-                stmtDelete.setInt(1, retrospective.getId());
-                stmtDelete.executeUpdate();
-            }
-
-            String sqlInsertImprovements = "INSERT INTO retrospective_improvements (retrospective_id, improvement) VALUES (?, ?)";
-            try (PreparedStatement stmtInsert = conn.prepareStatement(sqlInsertImprovements)) {
-                for (String improvement : retrospective.getImprovements()) {
-                    stmtInsert.setInt(1, retrospective.getId());
-                    stmtInsert.setString(2, improvement);
-                    stmtInsert.executeUpdate();
-                }
-            }
-
-            // Обновление positives
-            String sqlDeletePositives = "DELETE FROM retrospective_positives WHERE retrospective_id = ?";
-            try (PreparedStatement stmtDelete = conn.prepareStatement(sqlDeletePositives)) {
-                stmtDelete.setInt(1, retrospective.getId());
-                stmtDelete.executeUpdate();
-            }
-
-            String sqlInsertPositives = "INSERT INTO retrospective_positives (retrospective_id, positive) VALUES (?, ?)";
-            try (PreparedStatement stmtInsert = conn.prepareStatement(sqlInsertPositives)) {
-                for (String positive : retrospective.getPositives()) {
-                    stmtInsert.setInt(1, retrospective.getId());
-                    stmtInsert.setString(2, positive);
-                    stmtInsert.executeUpdate();
-                }
-            }
-
+            em.merge(retrospective);
+            em.getTransaction().commit();
+            log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Retrospective updated"));
             log.info(String.format(Constants.LOG_METHOD_END, methodName));
-        } catch (SQLException e) {
+        } catch (Exception e) {
             log.error(String.format(Constants.LOG_ERROR, methodName, e.getMessage()));
             throw new RuntimeException("Failed to update retrospective", e);
         }
@@ -263,16 +117,17 @@ public class RetrospectiveDAO implements GenericDAO<Retrospective, Integer> {
         log.info(String.format(Constants.LOG_METHOD_START, methodName));
         log.debug(String.format(Constants.LOG_METHOD_DEBUG, methodName, "id: " + id));
 
-        String sql = "DELETE FROM retrospectives WHERE id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, id);
-
+        try (EntityManager em = DatabaseConfig.getEntityManager()) {
+            em.getTransaction().begin();
             log.info(String.format(Constants.LOG_DB_OPERATION, methodName));
-            int rowsAffected = stmt.executeUpdate();
-            log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Rows affected: " + rowsAffected));
+            Retrospective retrospective = em.find(Retrospective.class, id);
+            if (retrospective != null) {
+                em.remove(retrospective);
+            }
+            em.getTransaction().commit();
+            log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, retrospective != null ? "Retrospective deleted" : "Retrospective not found"));
             log.info(String.format(Constants.LOG_METHOD_END, methodName));
-        } catch (SQLException e) {
+        } catch (Exception e) {
             log.error(String.format(Constants.LOG_ERROR, methodName, e.getMessage()));
             throw new RuntimeException("Failed to delete retrospective", e);
         }

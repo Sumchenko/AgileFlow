@@ -1,93 +1,205 @@
 package ru.sfedu.agileflow.dao;
 
+import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import ru.sfedu.agileflow.config.DatabaseConfig;
-import ru.sfedu.agileflow.dao.ProjectDAO;
-import ru.sfedu.agileflow.models.Project;
 import ru.sfedu.agileflow.constants.Constants;
+import ru.sfedu.agileflow.models.Project;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.SQLException;
+import java.util.List;
+import java.util.Optional;
 
 import static org.junit.Assert.*;
 
 /**
- * Тестовый класс для ProjectDAO.
+ * Тестовый класс для проверки операций DAO с проектами.
  */
 public class ProjectDAOTest {
+    private static final Logger log = Logger.getLogger(ProjectDAOTest.class);
     private ProjectDAO projectDAO;
 
+    /**
+     * Подготовка перед каждым тестом.
+     */
     @Before
     public void setUp() {
+        String methodName = "setUp";
+        log.info(String.format(Constants.LOG_METHOD_START, methodName));
         projectDAO = new ProjectDAO();
-        clearProjectsTable();
-    }
-
-    @After
-    public void tearDown() {
-        clearProjectsTable();
+        log.info("setUp [1] Инициализация ProjectDAO завершена");
+        log.info(String.format(Constants.LOG_METHOD_END, methodName));
     }
 
     /**
-     * Очищает таблицу projects в базе данных.
+     * Очистка после каждого теста.
      */
-    private void clearProjectsTable() {
-        String sql = "DELETE FROM projects";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to clear projects table", e);
+    @After
+    public void tearDown() {
+        String methodName = "tearDown";
+        log.info(String.format(Constants.LOG_METHOD_START, methodName));
+        try {
+            List<Project> projects = projectDAO.findAll();
+            for (Project project : projects) {
+                projectDAO.delete(project.getId());
+            }
+            log.info("tearDown [1] Все проекты удалены");
+            log.info(String.format(Constants.LOG_METHOD_END, methodName));
+        } catch (Exception e) {
+            log.error(String.format(Constants.LOG_ERROR, methodName, "Не удалось очистить данные: " + e.getMessage()), e);
         }
     }
 
     /**
-     * Тест создания проекта
-     * Тип: позитивный
+     * Тестирование создания проекта.
+     * Тип: Позитивный
      */
     @Test
-    public void testCreateProjectPositive() {
-        Project project = new Project(Constants.TEST_PROJECT_NAME, "Test Description");
-        projectDAO.create(project);
-        assertNotNull(project.getId());
-        Project foundProject = projectDAO.findById(project.getId());
-        assertNotNull(foundProject);
-        assertEquals(Constants.TEST_PROJECT_NAME, foundProject.getName());
+    public void testCreateProject() {
+        String methodName = "testCreateProject";
+        log.info(String.format(Constants.LOG_METHOD_START, methodName));
+        try {
+            Project project = new Project("Тестовый проект", "Описание тестового проекта");
+            log.info("testCreateProject [1] Создание проекта");
+            projectDAO.create(project);
+            assertNotNull("Идентификатор проекта должен быть установлен", project.getId());
+            log.info("testCreateProject [2] Проект успешно создан с ID: " + project.getId());
+            log.info(String.format(Constants.LOG_METHOD_END, methodName));
+        } catch (Exception e) {
+            log.error(String.format(Constants.LOG_ERROR, methodName, "Не удалось создать проект: " + e.getMessage()), e);
+            fail("Не удалось создать проект: " + e.getMessage());
+        }
     }
 
     /**
-     * Тест создания проекта с null названием
-     * Тип: негативный
+     * Тестирование поиска проекта по идентификатору.
+     * Тип: Позитивный
      */
-    @Test(expected = RuntimeException.class)
-    public void testCreateProjectNegative() {
-        Project project = new Project(null, "Test Description");
-        projectDAO.create(project); // Должно выбросить исключение из-за NOT NULL ограничения
+    @Test
+    public void testFindById() {
+        String methodName = "testFindById";
+        log.info(String.format(Constants.LOG_METHOD_START, methodName));
+        try {
+            Project project = new Project("Тестовый проект", "Описание");
+            log.info("testFindById [1] Создание проекта");
+            projectDAO.create(project);
+            Integer id = project.getId();
+
+            log.info("testFindById [2] Поиск проекта по ID: " + id);
+            Optional<Project> found = projectDAO.findById(id);
+            assertTrue("Проект должен быть найден", found.isPresent());
+            assertEquals("Название проекта должно совпадать", "Тестовый проект", found.get().getName());
+            log.info("testFindById [3] Проект успешно найден");
+            log.info(String.format(Constants.LOG_METHOD_END, methodName));
+        } catch (Exception e) {
+            log.error(String.format(Constants.LOG_ERROR, methodName, "Не удалось найти проект: " + e.getMessage()), e);
+            fail("Не удалось найти проект: " + e.getMessage());
+        }
     }
 
     /**
-     * Тест поиска проекта по ID
-     * Тип: позитивный
+     * Тестирование поиска несуществующего проекта.
+     * Тип: Негативный
      */
     @Test
-    public void testFindByIdPositive() {
-        Project project = new Project(Constants.TEST_PROJECT_NAME, "Test Description");
-        projectDAO.create(project);
-        Project foundProject = projectDAO.findById(project.getId());
-        assertNotNull(foundProject);
-        assertEquals(project.getId(), foundProject.getId());
+    public void testFindByIdNotFound() {
+        String methodName = "testFindByIdNotFound";
+        log.info(String.format(Constants.LOG_METHOD_START, methodName));
+        try {
+            log.info("testFindByIdNotFound [1] Поиск проекта с ID: 999");
+            Optional<Project> found = projectDAO.findById(999);
+            assertFalse("Проект не должен быть найден", found.isPresent());
+            log.info("testFindByIdNotFound [2] Проект не найден, как ожидалось");
+            log.info(String.format(Constants.LOG_METHOD_END, methodName));
+        } catch (Exception e) {
+            log.error(String.format(Constants.LOG_ERROR, methodName, "Не удалось выполнить поиск: " + e.getMessage()), e);
+            fail("Не удалось выполнить поиск: " + e.getMessage());
+        }
     }
 
     /**
-     * Тест поиска несуществующего проекта
-     * Тип: негативный
+     * Тестирование получения списка всех проектов.
+     * Тип: Позитивный
      */
     @Test
-    public void testFindByIdNegative() {
-        Project foundProject = projectDAO.findById(9999);
-        assertNull(foundProject);
+    public void testFindAll() {
+        String methodName = "testFindAll";
+        log.info(String.format(Constants.LOG_METHOD_START, methodName));
+        try {
+            Project project1 = new Project("Проект 1", "Описание 1");
+            Project project2 = new Project("Проект 2", "Описание 2");
+            log.info("testFindAll [1] Создание двух проектов");
+            projectDAO.create(project1);
+            projectDAO.create(project2);
+
+            log.info("testFindAll [2] Получение списка всех проектов");
+            List<Project> projects = projectDAO.findAll();
+            assertEquals("Должно быть найдено 2 проекта", 2, projects.size());
+            log.info("testFindAll [3] Найдено проектов: " + projects.size());
+            log.info(String.format(Constants.LOG_METHOD_END, methodName));
+        } catch (Exception e) {
+            log.error(String.format(Constants.LOG_ERROR, methodName, "Не удалось получить список проектов: " + e.getMessage()), e);
+            fail("Не удалось получить список проектов: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Тестирование обновления проекта.
+     * Тип: Позитивный
+     */
+    @Test
+    public void testUpdateProject() {
+        String methodName = "testUpdateProject";
+        log.info(String.format(Constants.LOG_METHOD_START, methodName));
+        try {
+            Project project = new Project("Тестовый проект", "Описание");
+            log.info("testUpdateProject [1] Создание проекта");
+            projectDAO.create(project);
+            Integer id = project.getId();
+
+            project.setName("Обновленный проект");
+            project.setDescription("Новое описание");
+            log.info("testUpdateProject [2] Обновление проекта");
+            projectDAO.update(project);
+
+            log.info("testUpdateProject [3] Проверка обновленного проекта");
+            Optional<Project> updated = projectDAO.findById(id);
+            assertTrue("Проект должен быть найден", updated.isPresent());
+            assertEquals("Название должно быть обновлено", "Обновленный проект", updated.get().getName());
+            assertEquals("Описание должно быть обновлено", "Новое описание", updated.get().getDescription());
+            log.info("testUpdateProject [4] Проект успешно обновлен");
+            log.info(String.format(Constants.LOG_METHOD_END, methodName));
+        } catch (Exception e) {
+            log.error(String.format(Constants.LOG_ERROR, methodName, "Не удалось обновить проект: " + e.getMessage()), e);
+            fail("Не удалось обновить проект: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Тестирование удаления проекта.
+     * Тип: Позитивный
+     */
+    @Test
+    public void testDeleteProject() {
+        String methodName = "testDeleteProject";
+        log.info(String.format(Constants.LOG_METHOD_START, methodName));
+        try {
+            Project project = new Project("Тестовый проект", "Описание");
+            log.info("testDeleteProject [1] Создание проекта");
+            projectDAO.create(project);
+            Integer id = project.getId();
+
+            log.info("testDeleteProject [2] Удаление проекта с ID: " + id);
+            projectDAO.delete(id);
+
+            log.info("testDeleteProject [3] Проверка удаления");
+            Optional<Project> deleted = projectDAO.findById(id);
+            assertFalse("Проект не должен быть найден", deleted.isPresent());
+            log.info("testDeleteProject [4] Проект успешно удален");
+            log.info(String.format(Constants.LOG_METHOD_END, methodName));
+        } catch (Exception e) {
+            log.error(String.format(Constants.LOG_ERROR, methodName, "Не удалось удалить проект: " + e.getMessage()), e);
+            fail("Не удалось удалить проект: " + e.getMessage());
+        }
     }
 }

@@ -1,6 +1,7 @@
 package ru.sfedu.agileflow.dao;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Общий интерфейс для DAO-классов, предоставляющий CRUD-операции.
@@ -18,9 +19,9 @@ public interface GenericDAO<T, ID> {
     /**
      * Находит запись по идентификатору.
      * @param id Идентификатор записи
-     * @return Объект типа T или null, если запись не найдена
+     * @return Optional с объектом типа T, если найден, иначе пустой Optional
      */
-    T findById(ID id);
+    Optional<T> findById(ID id);
 
     /**
      * Возвращает список всех записей.
