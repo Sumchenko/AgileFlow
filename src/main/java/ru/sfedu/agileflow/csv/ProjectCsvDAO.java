@@ -4,7 +4,7 @@ import org.apache.log4j.Logger;
 import ru.sfedu.agileflow.constants.Constants;
 import ru.sfedu.agileflow.dao.GenericDAO;
 import ru.sfedu.agileflow.models.Project;
-import ru.sfedu.agileflow.utils.CsvUtil;
+import ru.sfedu.agileflow.config.CsvConfig;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,15 +28,15 @@ public class ProjectCsvDAO implements GenericDAO<Project, Integer> {
         log.debug(String.format(Constants.LOG_METHOD_DEBUG, methodName, project.toString()));
 
         try {
-            List<String[]> records = CsvUtil.readCsv(FILE_NAME);
-            project.setId(CsvUtil.generateId(FILE_NAME));
+            List<String[]> records = CsvConfig.readCsv(FILE_NAME);
+            project.setId(CsvConfig.generateId(FILE_NAME));
             String[] record = new String[]{
                     String.valueOf(project.getId()),
                     project.getName(),
                     project.getDescription()
             };
             records.add(record);
-            CsvUtil.writeCsv(FILE_NAME, records);
+            CsvConfig.writeCsv(FILE_NAME, records);
             log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Проект сохранен с ID: " + project.getId()));
             log.info(String.format(Constants.LOG_METHOD_END, methodName));
         } catch (Exception e) {
@@ -52,7 +52,7 @@ public class ProjectCsvDAO implements GenericDAO<Project, Integer> {
         log.debug(String.format(Constants.LOG_METHOD_DEBUG, methodName, "id: " + id));
 
         try {
-            Optional<String[]> recordOpt = CsvUtil.findById(FILE_NAME, id);
+            Optional<String[]> recordOpt = CsvConfig.findById(FILE_NAME, id);
             if (recordOpt.isEmpty()) {
                 log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Проект не найден"));
                 log.info(String.format(Constants.LOG_METHOD_END, methodName));
@@ -78,7 +78,7 @@ public class ProjectCsvDAO implements GenericDAO<Project, Integer> {
         log.info(String.format(Constants.LOG_METHOD_START, methodName));
 
         try {
-            List<String[]> records = CsvUtil.readCsv(FILE_NAME);
+            List<String[]> records = CsvConfig.readCsv(FILE_NAME);
             List<Project> projects = new ArrayList<>();
             for (String[] record : records) {
                 try {
@@ -111,7 +111,7 @@ public class ProjectCsvDAO implements GenericDAO<Project, Integer> {
         log.debug(String.format(Constants.LOG_METHOD_DEBUG, methodName, project.toString()));
 
         try {
-            List<String[]> records = CsvUtil.readCsv(FILE_NAME);
+            List<String[]> records = CsvConfig.readCsv(FILE_NAME);
             boolean found = false;
             for (int i = 0; i < records.size(); i++) {
                 if (records.get(i)[0].equals(String.valueOf(project.getId()))) {
@@ -128,7 +128,7 @@ public class ProjectCsvDAO implements GenericDAO<Project, Integer> {
                 log.error(String.format(Constants.LOG_ERROR, methodName, "Проект с ID " + project.getId() + " не найден"));
                 throw new RuntimeException("Проект не найден");
             }
-            CsvUtil.writeCsv(FILE_NAME, records);
+            CsvConfig.writeCsv(FILE_NAME, records);
             log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Проект обновлен"));
             log.info(String.format(Constants.LOG_METHOD_END, methodName));
         } catch (Exception e) {
@@ -144,9 +144,9 @@ public class ProjectCsvDAO implements GenericDAO<Project, Integer> {
         log.debug(String.format(Constants.LOG_METHOD_DEBUG, methodName, "id: " + id));
 
         try {
-            List<String[]> records = CsvUtil.readCsv(FILE_NAME);
+            List<String[]> records = CsvConfig.readCsv(FILE_NAME);
             records.removeIf(record -> record[0].equals(String.valueOf(id)));
-            CsvUtil.writeCsv(FILE_NAME, records);
+            CsvConfig.writeCsv(FILE_NAME, records);
             log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Проект удален"));
             log.info(String.format(Constants.LOG_METHOD_END, methodName));
         } catch (Exception e) {

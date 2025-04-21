@@ -4,7 +4,7 @@ import org.apache.log4j.Logger;
 import ru.sfedu.agileflow.constants.Constants;
 import ru.sfedu.agileflow.models.Project;
 import ru.sfedu.agileflow.models.User;
-import ru.sfedu.agileflow.utils.CsvUtil;
+import ru.sfedu.agileflow.config.CsvConfig;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,12 +27,12 @@ public class ProjectUserCsvDAO {
         log.debug(String.format(Constants.LOG_METHOD_DEBUG, methodName, "projectId: " + projectId + ", userId: " + userId));
 
         try {
-            List<String[]> records = CsvUtil.readCsv(FILE_NAME);
+            List<String[]> records = CsvConfig.readCsv(FILE_NAME);
             boolean exists = records.stream()
                     .anyMatch(record -> record[0].equals(String.valueOf(projectId)) && record[1].equals(String.valueOf(userId)));
             if (!exists) {
                 records.add(new String[]{String.valueOf(projectId), String.valueOf(userId)});
-                CsvUtil.writeCsv(FILE_NAME, records);
+                CsvConfig.writeCsv(FILE_NAME, records);
                 log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Пользователь добавлен в проект"));
             } else {
                 log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Связь уже существует"));
@@ -55,9 +55,9 @@ public class ProjectUserCsvDAO {
         log.debug(String.format(Constants.LOG_METHOD_DEBUG, methodName, "projectId: " + projectId + ", userId: " + userId));
 
         try {
-            List<String[]> records = CsvUtil.readCsv(FILE_NAME);
+            List<String[]> records = CsvConfig.readCsv(FILE_NAME);
             records.removeIf(record -> record[0].equals(String.valueOf(projectId)) && record[1].equals(String.valueOf(userId)));
-            CsvUtil.writeCsv(FILE_NAME, records);
+            CsvConfig.writeCsv(FILE_NAME, records);
             log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Пользователь удален из проекта"));
             log.info(String.format(Constants.LOG_METHOD_END, methodName));
         } catch (Exception e) {
@@ -77,7 +77,7 @@ public class ProjectUserCsvDAO {
         log.debug(String.format(Constants.LOG_METHOD_DEBUG, methodName, "projectId: " + projectId));
 
         try {
-            List<String[]> records = CsvUtil.readCsv(FILE_NAME);
+            List<String[]> records = CsvConfig.readCsv(FILE_NAME);
             UserCsvDAO userDAO = new UserCsvDAO();
             List<User> users = new ArrayList<>();
             for (String[] record : records) {
@@ -110,7 +110,7 @@ public class ProjectUserCsvDAO {
         log.debug(String.format(Constants.LOG_METHOD_DEBUG, methodName, "userId: " + userId));
 
         try {
-            List<String[]> records = CsvUtil.readCsv(FILE_NAME);
+            List<String[]> records = CsvConfig.readCsv(FILE_NAME);
             ProjectCsvDAO projectDAO = new ProjectCsvDAO();
             List<Project> projects = new ArrayList<>();
             for (String[] record : records) {

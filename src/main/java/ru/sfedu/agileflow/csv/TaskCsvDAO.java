@@ -5,7 +5,7 @@ import ru.sfedu.agileflow.constants.Constants;
 import ru.sfedu.agileflow.dao.GenericDAO;
 import ru.sfedu.agileflow.models.Task;
 import ru.sfedu.agileflow.models.TaskStatus;
-import ru.sfedu.agileflow.utils.CsvUtil;
+import ru.sfedu.agileflow.config.CsvConfig;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,8 +29,8 @@ public class TaskCsvDAO implements GenericDAO<Task, Integer> {
         log.debug(String.format(Constants.LOG_METHOD_DEBUG, methodName, task.toString()));
 
         try {
-            List<String[]> records = CsvUtil.readCsv(FILE_NAME);
-            task.setId(CsvUtil.generateId(FILE_NAME));
+            List<String[]> records = CsvConfig.readCsv(FILE_NAME);
+            task.setId(CsvConfig.generateId(FILE_NAME));
             String[] record = new String[]{
                     String.valueOf(task.getId()),
                     task.getTitle(),
@@ -41,7 +41,7 @@ public class TaskCsvDAO implements GenericDAO<Task, Integer> {
                     task.getAssignedUser() != null ? String.valueOf(task.getAssignedUser().getId()) : ""
             };
             records.add(record);
-            CsvUtil.writeCsv(FILE_NAME, records);
+            CsvConfig.writeCsv(FILE_NAME, records);
             log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Задача сохранена с ID: " + task.getId()));
             log.info(String.format(Constants.LOG_METHOD_END, methodName));
         } catch (Exception e) {
@@ -57,7 +57,7 @@ public class TaskCsvDAO implements GenericDAO<Task, Integer> {
         log.debug(String.format(Constants.LOG_METHOD_DEBUG, methodName, "id: " + id));
 
         try {
-            Optional<String[]> recordOpt = CsvUtil.findById(FILE_NAME, id);
+            Optional<String[]> recordOpt = CsvConfig.findById(FILE_NAME, id);
             if (recordOpt.isEmpty()) {
                 log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Задача не найдена"));
                 log.info(String.format(Constants.LOG_METHOD_END, methodName));
@@ -86,7 +86,7 @@ public class TaskCsvDAO implements GenericDAO<Task, Integer> {
         log.info(String.format(Constants.LOG_METHOD_START, methodName));
 
         try {
-            List<String[]> records = CsvUtil.readCsv(FILE_NAME);
+            List<String[]> records = CsvConfig.readCsv(FILE_NAME);
             List<Task> tasks = new ArrayList<>();
             for (String[] record : records) {
                 try {
@@ -122,7 +122,7 @@ public class TaskCsvDAO implements GenericDAO<Task, Integer> {
         log.debug(String.format(Constants.LOG_METHOD_DEBUG, methodName, task.toString()));
 
         try {
-            List<String[]> records = CsvUtil.readCsv(FILE_NAME);
+            List<String[]> records = CsvConfig.readCsv(FILE_NAME);
             boolean found = false;
             for (int i = 0; i < records.size(); i++) {
                 if (records.get(i)[0].equals(String.valueOf(task.getId()))) {
@@ -143,7 +143,7 @@ public class TaskCsvDAO implements GenericDAO<Task, Integer> {
                 log.error(String.format(Constants.LOG_ERROR, methodName, "Задача с ID " + task.getId() + " не найдена"));
                 throw new RuntimeException("Задача не найдена");
             }
-            CsvUtil.writeCsv(FILE_NAME, records);
+            CsvConfig.writeCsv(FILE_NAME, records);
             log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Задача обновлена"));
             log.info(String.format(Constants.LOG_METHOD_END, methodName));
         } catch (Exception e) {
@@ -159,9 +159,9 @@ public class TaskCsvDAO implements GenericDAO<Task, Integer> {
         log.debug(String.format(Constants.LOG_METHOD_DEBUG, methodName, "id: " + id));
 
         try {
-            List<String[]> records = CsvUtil.readCsv(FILE_NAME);
+            List<String[]> records = CsvConfig.readCsv(FILE_NAME);
             records.removeIf(record -> record[0].equals(String.valueOf(id)));
-            CsvUtil.writeCsv(FILE_NAME, records);
+            CsvConfig.writeCsv(FILE_NAME, records);
             log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Задача удалена"));
             log.info(String.format(Constants.LOG_METHOD_END, methodName));
         } catch (Exception e) {

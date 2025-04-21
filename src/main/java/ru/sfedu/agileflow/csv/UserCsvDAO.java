@@ -4,8 +4,8 @@ import org.apache.log4j.Logger;
 import ru.sfedu.agileflow.constants.Constants;
 import ru.sfedu.agileflow.dao.GenericDAO;
 import ru.sfedu.agileflow.models.User;
-import ru.sfedu.agileflow.utils.CsvUtil;
-import ru.sfedu.agileflow.utils.DateUtil;
+import ru.sfedu.agileflow.config.CsvConfig;
+import ru.sfedu.agileflow.config.CsvDateUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,19 +29,19 @@ public class UserCsvDAO implements GenericDAO<User, Integer> {
         log.debug(String.format(Constants.LOG_METHOD_DEBUG, methodName, user.toString()));
 
         try {
-            List<String[]> records = CsvUtil.readCsv(FILE_NAME);
-            user.setId(CsvUtil.generateId(FILE_NAME));
+            List<String[]> records = CsvConfig.readCsv(FILE_NAME);
+            user.setId(CsvConfig.generateId(FILE_NAME));
             String[] record = new String[]{
                     String.valueOf(user.getId()),
                     user.getName(),
                     user.getEmail(),
                     user.getBio() != null ? user.getBio() : "",
                     String.valueOf(user.isActive()),
-                    DateUtil.serializeDate(user.getLastLogin(), true),
-                    DateUtil.serializeDate(user.getDateJoined(), true)
+                    CsvDateUtil.serializeDate(user.getLastLogin(), true),
+                    CsvDateUtil.serializeDate(user.getDateJoined(), true)
             };
             records.add(record);
-            CsvUtil.writeCsv(FILE_NAME, records);
+            CsvConfig.writeCsv(FILE_NAME, records);
             log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Пользователь сохранен с ID: " + user.getId()));
             log.info(String.format(Constants.LOG_METHOD_END, methodName));
         } catch (Exception e) {
@@ -57,7 +57,7 @@ public class UserCsvDAO implements GenericDAO<User, Integer> {
         log.debug(String.format(Constants.LOG_METHOD_DEBUG, methodName, "id: " + id));
 
         try {
-            Optional<String[]> recordOpt = CsvUtil.findById(FILE_NAME, id);
+            Optional<String[]> recordOpt = CsvConfig.findById(FILE_NAME, id);
             if (recordOpt.isEmpty()) {
                 log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Пользователь не найден"));
                 log.info(String.format(Constants.LOG_METHOD_END, methodName));
@@ -70,8 +70,8 @@ public class UserCsvDAO implements GenericDAO<User, Integer> {
             user.setEmail(record[2]);
             user.setBio(record[3]);
             user.setActive(Boolean.parseBoolean(record[4]));
-            user.setLastLogin(DateUtil.deserializeDate(record[5], true));
-            user.setDateJoined(DateUtil.deserializeDate(record[6], true));
+            user.setLastLogin(CsvDateUtil.deserializeDate(record[5], true));
+            user.setDateJoined(CsvDateUtil.deserializeDate(record[6], true));
             log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Пользователь найден: " + user));
             log.info(String.format(Constants.LOG_METHOD_END, methodName));
             return Optional.of(user);
@@ -87,7 +87,7 @@ public class UserCsvDAO implements GenericDAO<User, Integer> {
         log.info(String.format(Constants.LOG_METHOD_START, methodName));
 
         try {
-            List<String[]> records = CsvUtil.readCsv(FILE_NAME);
+            List<String[]> records = CsvConfig.readCsv(FILE_NAME);
             List<User> users = new ArrayList<>();
             for (String[] record : records) {
                 try {
@@ -97,8 +97,8 @@ public class UserCsvDAO implements GenericDAO<User, Integer> {
                     user.setEmail(record[2]);
                     user.setBio(record[3]);
                     user.setActive(Boolean.parseBoolean(record[4]));
-                    user.setLastLogin(DateUtil.deserializeDate(record[5], true));
-                    user.setDateJoined(DateUtil.deserializeDate(record[6], true));
+                    user.setLastLogin(CsvDateUtil.deserializeDate(record[5], true));
+                    user.setDateJoined(CsvDateUtil.deserializeDate(record[6], true));
                     users.add(user);
                 } catch (NumberFormatException e) {
                     // Пропускаем некорректные записи
@@ -124,7 +124,7 @@ public class UserCsvDAO implements GenericDAO<User, Integer> {
         log.debug(String.format(Constants.LOG_METHOD_DEBUG, methodName, user.toString()));
 
         try {
-            List<String[]> records = CsvUtil.readCsv(FILE_NAME);
+            List<String[]> records = CsvConfig.readCsv(FILE_NAME);
             boolean found = false;
             for (int i = 0; i < records.size(); i++) {
                 if (records.get(i)[0].equals(String.valueOf(user.getId()))) {
@@ -134,8 +134,8 @@ public class UserCsvDAO implements GenericDAO<User, Integer> {
                             user.getEmail(),
                             user.getBio() != null ? user.getBio() : "",
                             String.valueOf(user.isActive()),
-                            DateUtil.serializeDate(user.getLastLogin(), true),
-                            DateUtil.serializeDate(user.getDateJoined(), true)
+                            CsvDateUtil.serializeDate(user.getLastLogin(), true),
+                            CsvDateUtil.serializeDate(user.getDateJoined(), true)
                     });
                     found = true;
                     break;
@@ -145,7 +145,7 @@ public class UserCsvDAO implements GenericDAO<User, Integer> {
                 log.error(String.format(Constants.LOG_ERROR, methodName, "Пользователь с ID " + user.getId() + " не найден"));
                 throw new RuntimeException("Пользователь не найден");
             }
-            CsvUtil.writeCsv(FILE_NAME, records);
+            CsvConfig.writeCsv(FILE_NAME, records);
             log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Пользователь обновлен"));
             log.info(String.format(Constants.LOG_METHOD_END, methodName));
         } catch (Exception e) {
@@ -161,9 +161,9 @@ public class UserCsvDAO implements GenericDAO<User, Integer> {
         log.debug(String.format(Constants.LOG_METHOD_DEBUG, methodName, "id: " + id));
 
         try {
-            List<String[]> records = CsvUtil.readCsv(FILE_NAME);
+            List<String[]> records = CsvConfig.readCsv(FILE_NAME);
             records.removeIf(record -> record[0].equals(String.valueOf(id)));
-            CsvUtil.writeCsv(FILE_NAME, records);
+            CsvConfig.writeCsv(FILE_NAME, records);
             log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Пользователь удален"));
             log.info(String.format(Constants.LOG_METHOD_END, methodName));
         } catch (Exception e) {

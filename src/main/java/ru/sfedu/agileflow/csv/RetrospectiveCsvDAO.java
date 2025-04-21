@@ -4,7 +4,7 @@ import org.apache.log4j.Logger;
 import ru.sfedu.agileflow.constants.Constants;
 import ru.sfedu.agileflow.dao.GenericDAO;
 import ru.sfedu.agileflow.models.Retrospective;
-import ru.sfedu.agileflow.utils.CsvUtil;
+import ru.sfedu.agileflow.config.CsvConfig;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,38 +32,38 @@ public class RetrospectiveCsvDAO implements GenericDAO<Retrospective, Integer> {
 
         try {
             // Сохранение ретроспективы
-            List<String[]> records = CsvUtil.readCsv(FILE_NAME);
-            retrospective.setId(CsvUtil.generateId(FILE_NAME));
+            List<String[]> records = CsvConfig.readCsv(FILE_NAME);
+            retrospective.setId(CsvConfig.generateId(FILE_NAME));
             String[] record = new String[]{
                     String.valueOf(retrospective.getId()),
                     retrospective.getSprint() != null ? String.valueOf(retrospective.getSprint().getId()) : "",
                     retrospective.getSummary()
             };
             records.add(record);
-            CsvUtil.writeCsv(FILE_NAME, records);
+            CsvConfig.writeCsv(FILE_NAME, records);
 
             // Сохранение improvements
             if (retrospective.getImprovements() != null && !retrospective.getImprovements().isEmpty()) {
-                List<String[]> improvementRecords = CsvUtil.readCsv(IMPROVEMENTS_FILE);
+                List<String[]> improvementRecords = CsvConfig.readCsv(IMPROVEMENTS_FILE);
                 for (String improvement : retrospective.getImprovements()) {
                     improvementRecords.add(new String[]{
                             String.valueOf(retrospective.getId()),
                             improvement
                     });
                 }
-                CsvUtil.writeCsv(IMPROVEMENTS_FILE, improvementRecords);
+                CsvConfig.writeCsv(IMPROVEMENTS_FILE, improvementRecords);
             }
 
             // Сохранение positives
             if (retrospective.getPositives() != null && !retrospective.getPositives().isEmpty()) {
-                List<String[]> positiveRecords = CsvUtil.readCsv(POSITIVES_FILE);
+                List<String[]> positiveRecords = CsvConfig.readCsv(POSITIVES_FILE);
                 for (String positive : retrospective.getPositives()) {
                     positiveRecords.add(new String[]{
                             String.valueOf(retrospective.getId()),
                             positive
                     });
                 }
-                CsvUtil.writeCsv(POSITIVES_FILE, positiveRecords);
+                CsvConfig.writeCsv(POSITIVES_FILE, positiveRecords);
             }
 
             log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Ретроспектива сохранена с ID: " + retrospective.getId()));
@@ -81,7 +81,7 @@ public class RetrospectiveCsvDAO implements GenericDAO<Retrospective, Integer> {
         log.debug(String.format(Constants.LOG_METHOD_DEBUG, methodName, "id: " + id));
 
         try {
-            Optional<String[]> recordOpt = CsvUtil.findById(FILE_NAME, id);
+            Optional<String[]> recordOpt = CsvConfig.findById(FILE_NAME, id);
             if (recordOpt.isEmpty()) {
                 log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Ретроспектива не найдена"));
                 log.info(String.format(Constants.LOG_METHOD_END, methodName));
@@ -93,7 +93,7 @@ public class RetrospectiveCsvDAO implements GenericDAO<Retrospective, Integer> {
             retrospective.setSummary(record[2]);
 
             // Загрузка improvements
-            List<String[]> improvementRecords = CsvUtil.readCsv(IMPROVEMENTS_FILE);
+            List<String[]> improvementRecords = CsvConfig.readCsv(IMPROVEMENTS_FILE);
             List<String> improvements = improvementRecords.stream()
                     .filter(r -> r[0].equals(String.valueOf(id)))
                     .map(r -> r[1])
@@ -101,7 +101,7 @@ public class RetrospectiveCsvDAO implements GenericDAO<Retrospective, Integer> {
             retrospective.setImprovements(improvements);
 
             // Загрузка positives
-            List<String[]> positiveRecords = CsvUtil.readCsv(POSITIVES_FILE);
+            List<String[]> positiveRecords = CsvConfig.readCsv(POSITIVES_FILE);
             List<String> positives = positiveRecords.stream()
                     .filter(r -> r[0].equals(String.valueOf(id)))
                     .map(r -> r[1])
@@ -123,7 +123,7 @@ public class RetrospectiveCsvDAO implements GenericDAO<Retrospective, Integer> {
         log.info(String.format(Constants.LOG_METHOD_START, methodName));
 
         try {
-            List<String[]> records = CsvUtil.readCsv(FILE_NAME);
+            List<String[]> records = CsvConfig.readCsv(FILE_NAME);
             List<Retrospective> retrospectives = new ArrayList<>();
             for (String[] record : records) {
                 try {
@@ -133,7 +133,7 @@ public class RetrospectiveCsvDAO implements GenericDAO<Retrospective, Integer> {
                     retrospective.setSummary(record[2]);
 
                     // Загрузка improvements
-                    List<String[]> improvementRecords = CsvUtil.readCsv(IMPROVEMENTS_FILE);
+                    List<String[]> improvementRecords = CsvConfig.readCsv(IMPROVEMENTS_FILE);
                     List<String> improvements = improvementRecords.stream()
                             .filter(r -> r[0].equals(String.valueOf(id)))
                             .map(r -> r[1])
@@ -141,7 +141,7 @@ public class RetrospectiveCsvDAO implements GenericDAO<Retrospective, Integer> {
                     retrospective.setImprovements(improvements);
 
                     // Загрузка positives
-                    List<String[]> positiveRecords = CsvUtil.readCsv(POSITIVES_FILE);
+                    List<String[]> positiveRecords = CsvConfig.readCsv(POSITIVES_FILE);
                     List<String> positives = positiveRecords.stream()
                             .filter(r -> r[0].equals(String.valueOf(id)))
                             .map(r -> r[1])
@@ -174,7 +174,7 @@ public class RetrospectiveCsvDAO implements GenericDAO<Retrospective, Integer> {
 
         try {
             // Обновление ретроспективы
-            List<String[]> records = CsvUtil.readCsv(FILE_NAME);
+            List<String[]> records = CsvConfig.readCsv(FILE_NAME);
             boolean found = false;
             for (int i = 0; i < records.size(); i++) {
                 if (records.get(i)[0].equals(String.valueOf(retrospective.getId()))) {
@@ -191,10 +191,10 @@ public class RetrospectiveCsvDAO implements GenericDAO<Retrospective, Integer> {
                 log.error(String.format(Constants.LOG_ERROR, methodName, "Ретроспектива с ID " + retrospective.getId() + " не найдена"));
                 throw new RuntimeException("Ретроспектива не найдена");
             }
-            CsvUtil.writeCsv(FILE_NAME, records);
+            CsvConfig.writeCsv(FILE_NAME, records);
 
             // Обновление improvements
-            List<String[]> improvementRecords = CsvUtil.readCsv(IMPROVEMENTS_FILE);
+            List<String[]> improvementRecords = CsvConfig.readCsv(IMPROVEMENTS_FILE);
             improvementRecords.removeIf(r -> r[0].equals(String.valueOf(retrospective.getId())));
             if (retrospective.getImprovements() != null) {
                 for (String improvement : retrospective.getImprovements()) {
@@ -204,10 +204,10 @@ public class RetrospectiveCsvDAO implements GenericDAO<Retrospective, Integer> {
                     });
                 }
             }
-            CsvUtil.writeCsv(IMPROVEMENTS_FILE, improvementRecords);
+            CsvConfig.writeCsv(IMPROVEMENTS_FILE, improvementRecords);
 
             // Обновление positives
-            List<String[]> positiveRecords = CsvUtil.readCsv(POSITIVES_FILE);
+            List<String[]> positiveRecords = CsvConfig.readCsv(POSITIVES_FILE);
             positiveRecords.removeIf(r -> r[0].equals(String.valueOf(retrospective.getId())));
             if (retrospective.getPositives() != null) {
                 for (String positive : retrospective.getPositives()) {
@@ -217,7 +217,7 @@ public class RetrospectiveCsvDAO implements GenericDAO<Retrospective, Integer> {
                     });
                 }
             }
-            CsvUtil.writeCsv(POSITIVES_FILE, positiveRecords);
+            CsvConfig.writeCsv(POSITIVES_FILE, positiveRecords);
 
             log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Ретроспектива обновлена"));
             log.info(String.format(Constants.LOG_METHOD_END, methodName));
@@ -235,19 +235,19 @@ public class RetrospectiveCsvDAO implements GenericDAO<Retrospective, Integer> {
 
         try {
             // Удаление ретроспективы
-            List<String[]> records = CsvUtil.readCsv(FILE_NAME);
+            List<String[]> records = CsvConfig.readCsv(FILE_NAME);
             records.removeIf(record -> record[0].equals(String.valueOf(id)));
-            CsvUtil.writeCsv(FILE_NAME, records);
+            CsvConfig.writeCsv(FILE_NAME, records);
 
             // Удаление improvements
-            List<String[]> improvementRecords = CsvUtil.readCsv(IMPROVEMENTS_FILE);
+            List<String[]> improvementRecords = CsvConfig.readCsv(IMPROVEMENTS_FILE);
             improvementRecords.removeIf(r -> r[0].equals(String.valueOf(id)));
-            CsvUtil.writeCsv(IMPROVEMENTS_FILE, improvementRecords);
+            CsvConfig.writeCsv(IMPROVEMENTS_FILE, improvementRecords);
 
             // Удаление positives
-            List<String[]> positiveRecords = CsvUtil.readCsv(POSITIVES_FILE);
+            List<String[]> positiveRecords = CsvConfig.readCsv(POSITIVES_FILE);
             positiveRecords.removeIf(r -> r[0].equals(String.valueOf(id)));
-            CsvUtil.writeCsv(POSITIVES_FILE, positiveRecords);
+            CsvConfig.writeCsv(POSITIVES_FILE, positiveRecords);
 
             log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Ретроспектива удалена"));
             log.info(String.format(Constants.LOG_METHOD_END, methodName));

@@ -4,8 +4,8 @@ import org.apache.log4j.Logger;
 import ru.sfedu.agileflow.constants.Constants;
 import ru.sfedu.agileflow.dao.GenericDAO;
 import ru.sfedu.agileflow.models.Sprint;
-import ru.sfedu.agileflow.utils.CsvUtil;
-import ru.sfedu.agileflow.utils.DateUtil;
+import ru.sfedu.agileflow.config.CsvConfig;
+import ru.sfedu.agileflow.config.CsvDateUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,16 +29,16 @@ public class SprintCsvDAO implements GenericDAO<Sprint, Integer> {
         log.debug(String.format(Constants.LOG_METHOD_DEBUG, methodName, sprint.toString()));
 
         try {
-            List<String[]> records = CsvUtil.readCsv(FILE_NAME);
-            sprint.setId(CsvUtil.generateId(FILE_NAME));
+            List<String[]> records = CsvConfig.readCsv(FILE_NAME);
+            sprint.setId(CsvConfig.generateId(FILE_NAME));
             String[] record = new String[]{
                     String.valueOf(sprint.getId()),
-                    DateUtil.serializeDate(sprint.getStartDate(), false),
-                    DateUtil.serializeDate(sprint.getEndDate(), false),
+                    CsvDateUtil.serializeDate(sprint.getStartDate(), false),
+                    CsvDateUtil.serializeDate(sprint.getEndDate(), false),
                     sprint.getProject() != null ? String.valueOf(sprint.getProject().getId()) : ""
             };
             records.add(record);
-            CsvUtil.writeCsv(FILE_NAME, records);
+            CsvConfig.writeCsv(FILE_NAME, records);
             log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Спринт сохранен с ID: " + sprint.getId()));
             log.info(String.format(Constants.LOG_METHOD_END, methodName));
         } catch (Exception e) {
@@ -54,7 +54,7 @@ public class SprintCsvDAO implements GenericDAO<Sprint, Integer> {
         log.debug(String.format(Constants.LOG_METHOD_DEBUG, methodName, "id: " + id));
 
         try {
-            Optional<String[]> recordOpt = CsvUtil.findById(FILE_NAME, id);
+            Optional<String[]> recordOpt = CsvConfig.findById(FILE_NAME, id);
             if (recordOpt.isEmpty()) {
                 log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Спринт не найден"));
                 log.info(String.format(Constants.LOG_METHOD_END, methodName));
@@ -63,8 +63,8 @@ public class SprintCsvDAO implements GenericDAO<Sprint, Integer> {
             String[] record = recordOpt.get();
             Sprint sprint = new Sprint();
             sprint.setId(Integer.parseInt(record[0]));
-            sprint.setStartDate(DateUtil.deserializeDate(record[1], false));
-            sprint.setEndDate(DateUtil.deserializeDate(record[2], false));
+            sprint.setStartDate(CsvDateUtil.deserializeDate(record[1], false));
+            sprint.setEndDate(CsvDateUtil.deserializeDate(record[2], false));
             // Project будет загружен отдельно, если нужен
             log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Спринт найден: " + sprint));
             log.info(String.format(Constants.LOG_METHOD_END, methodName));
@@ -81,14 +81,14 @@ public class SprintCsvDAO implements GenericDAO<Sprint, Integer> {
         log.info(String.format(Constants.LOG_METHOD_START, methodName));
 
         try {
-            List<String[]> records = CsvUtil.readCsv(FILE_NAME);
+            List<String[]> records = CsvConfig.readCsv(FILE_NAME);
             List<Sprint> sprints = new ArrayList<>();
             for (String[] record : records) {
                 try {
                     Sprint sprint = new Sprint();
                     sprint.setId(Integer.parseInt(record[0]));
-                    sprint.setStartDate(DateUtil.deserializeDate(record[1], false));
-                    sprint.setEndDate(DateUtil.deserializeDate(record[2], false));
+                    sprint.setStartDate(CsvDateUtil.deserializeDate(record[1], false));
+                    sprint.setEndDate(CsvDateUtil.deserializeDate(record[2], false));
                     // Project будет загружен отдельно, если нужен
                     sprints.add(sprint);
                 } catch (NumberFormatException e) {
@@ -115,14 +115,14 @@ public class SprintCsvDAO implements GenericDAO<Sprint, Integer> {
         log.debug(String.format(Constants.LOG_METHOD_DEBUG, methodName, sprint.toString()));
 
         try {
-            List<String[]> records = CsvUtil.readCsv(FILE_NAME);
+            List<String[]> records = CsvConfig.readCsv(FILE_NAME);
             boolean found = false;
             for (int i = 0; i < records.size(); i++) {
                 if (records.get(i)[0].equals(String.valueOf(sprint.getId()))) {
                     records.set(i, new String[]{
                             String.valueOf(sprint.getId()),
-                            DateUtil.serializeDate(sprint.getStartDate(), false),
-                            DateUtil.serializeDate(sprint.getEndDate(), false),
+                            CsvDateUtil.serializeDate(sprint.getStartDate(), false),
+                            CsvDateUtil.serializeDate(sprint.getEndDate(), false),
                             sprint.getProject() != null ? String.valueOf(sprint.getProject().getId()) : ""
                     });
                     found = true;
@@ -133,7 +133,7 @@ public class SprintCsvDAO implements GenericDAO<Sprint, Integer> {
                 log.error(String.format(Constants.LOG_ERROR, methodName, "Спринт с ID " + sprint.getId() + " не найден"));
                 throw new RuntimeException("Спринт не найден");
             }
-            CsvUtil.writeCsv(FILE_NAME, records);
+            CsvConfig.writeCsv(FILE_NAME, records);
             log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Спринт обновлен"));
             log.info(String.format(Constants.LOG_METHOD_END, methodName));
         } catch (Exception e) {
@@ -149,9 +149,9 @@ public class SprintCsvDAO implements GenericDAO<Sprint, Integer> {
         log.debug(String.format(Constants.LOG_METHOD_DEBUG, methodName, "id: " + id));
 
         try {
-            List<String[]> records = CsvUtil.readCsv(FILE_NAME);
+            List<String[]> records = CsvConfig.readCsv(FILE_NAME);
             records.removeIf(record -> record[0].equals(String.valueOf(id)));
-            CsvUtil.writeCsv(FILE_NAME, records);
+            CsvConfig.writeCsv(FILE_NAME, records);
             log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Спринт удален"));
             log.info(String.format(Constants.LOG_METHOD_END, methodName));
         } catch (Exception e) {
