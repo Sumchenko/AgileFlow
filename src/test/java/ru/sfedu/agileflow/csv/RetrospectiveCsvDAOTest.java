@@ -26,7 +26,7 @@ public class RetrospectiveCsvDAOTest {
     private RetrospectiveCsvDAO retrospectiveDAO;
     private SprintCsvDAO sprintDAO;
     private ProjectCsvDAO projectDAO;
-    private static final String CSV_DIR = "src/main/resources/dataCSV";
+    private static final String CSV_DIR = "data/csv";
 
     @Before
     public void setUp() {

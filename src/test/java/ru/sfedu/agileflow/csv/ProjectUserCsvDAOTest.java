@@ -23,7 +23,7 @@ public class ProjectUserCsvDAOTest {
     private ProjectUserCsvDAO projectUserDAO;
     private ProjectCsvDAO projectDAO;
     private UserCsvDAO userDAO;
-    private static final String CSV_DIR = "src/main/resources/dataCSV";
+    private static final String CSV_DIR = "data/csv";
 
     @Before
     public void setUp() {
