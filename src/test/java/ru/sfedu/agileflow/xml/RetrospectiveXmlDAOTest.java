@@ -1,14 +1,16 @@
-package ru.sfedu.agileflow.dao;
+package ru.sfedu.agileflow.xml;
 
 import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import ru.sfedu.agileflow.config.XmlConfig;
 import ru.sfedu.agileflow.constants.Constants;
 import ru.sfedu.agileflow.models.Project;
 import ru.sfedu.agileflow.models.Retrospective;
 import ru.sfedu.agileflow.models.Sprint;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -17,13 +19,13 @@ import java.util.Optional;
 import static org.junit.Assert.*;
 
 /**
- * Тестовый класс для проверки операций DAO с ретроспективами.
+ * Тестовый класс для проверки операций XML DAO с ретроспективами.
  */
-public class RetrospectiveDAOTest {
-    private static final Logger log = Logger.getLogger(RetrospectiveDAOTest.class);
-    private RetrospectiveDAO retrospectiveDAO;
-    private SprintDAO sprintDAO;
-    private ProjectDAO projectDAO;
+public class RetrospectiveXmlDAOTest {
+    private static final Logger log = Logger.getLogger(RetrospectiveXmlDAOTest.class);
+    private RetrospectiveXmlDAO retrospectiveDAO;
+    private SprintXmlDAO sprintDAO;
+    private ProjectXmlDAO projectDAO;
 
     /**
      * Подготовка перед каждым тестом.
@@ -32,10 +34,10 @@ public class RetrospectiveDAOTest {
     public void setUp() {
         String methodName = "setUp";
         log.info(String.format(Constants.LOG_METHOD_START, methodName));
-        retrospectiveDAO = new RetrospectiveDAO();
-        sprintDAO = new SprintDAO();
-        projectDAO = new ProjectDAO();
-        log.info("setUp [1] Инициализация DAO завершена");
+        retrospectiveDAO = new RetrospectiveXmlDAO();
+        sprintDAO = new SprintXmlDAO();
+        projectDAO = new ProjectXmlDAO();
+        log.info("setUp [1] Инициализация DAO классов завершена");
         log.info(String.format(Constants.LOG_METHOD_END, methodName));
     }
 
@@ -59,7 +61,19 @@ public class RetrospectiveDAOTest {
             for (Project project : projects) {
                 projectDAO.delete(project.getId());
             }
-            log.info("tearDown [1] Все ретроспективы, спринты и проекты удалены");
+            File retrospectiveFile = new File(XmlConfig.getFilePath(Retrospective.class));
+            File sprintFile = new File(XmlConfig.getFilePath(Sprint.class));
+            File projectFile = new File(XmlConfig.getFilePath(Project.class));
+            if (retrospectiveFile.exists()) {
+                retrospectiveFile.delete();
+            }
+            if (sprintFile.exists()) {
+                sprintFile.delete();
+            }
+            if (projectFile.exists()) {
+                projectFile.delete();
+            }
+            log.info("tearDown [1] Все ретроспективы, спринты и проекты удалены, XML файлы очищены");
             log.info(String.format(Constants.LOG_METHOD_END, methodName));
         } catch (Exception e) {
             log.error(String.format(Constants.LOG_ERROR, methodName, "Не удалось очистить данные: " + e.getMessage()), e);
@@ -114,7 +128,7 @@ public class RetrospectiveDAOTest {
             log.info("testFindById [2] Поиск ретроспективы по ID: " + id);
             Optional<Retrospective> found = retrospectiveDAO.findById(id);
             assertTrue("Ретроспектива должна быть найдена", found.isPresent());
-            assertEquals("Итоги должны совпадать", "Итоги спринта", found.get().getSummary());
+            assertEquals("Сводка должна совпадать", "Итоги спринта", found.get().getSummary());
             log.info("testFindById [3] Ретроспектива успешно найдена");
             log.info(String.format(Constants.LOG_METHOD_END, methodName));
         } catch (Exception e) {
@@ -154,14 +168,12 @@ public class RetrospectiveDAOTest {
         try {
             Project project = new Project("Тестовый проект", "Описание");
             projectDAO.create(project);
-            Sprint sprint1 = new Sprint(new Date(), new Date(), project);
-            Sprint sprint2 = new Sprint(new Date(), new Date(), project);
-            sprintDAO.create(sprint1);
-            sprintDAO.create(sprint2);
-            Retrospective retrospective1 = new Retrospective(sprint1, "Итоги 1",
-                    Arrays.asList("Улучшение 1"), Arrays.asList("Позитив 1"));
-            Retrospective retrospective2 = new Retrospective(sprint2, "Итоги 2",
-                    Arrays.asList("Улучшение 2"), Arrays.asList("Позитив 2"));
+            Sprint sprint = new Sprint(new Date(), new Date(), project);
+            sprintDAO.create(sprint);
+            Retrospective retrospective1 = new Retrospective(sprint, "Итоги 1",
+                    Arrays.asList("Улучшить 1"), Arrays.asList("Положительное 1"));
+            Retrospective retrospective2 = new Retrospective(sprint, "Итоги 2",
+                    Arrays.asList("Улучшить 2"), Arrays.asList("Положительное 2"));
             log.info("testFindAll [1] Создание двух ретроспектив");
             retrospectiveDAO.create(retrospective1);
             retrospectiveDAO.create(retrospective2);
@@ -191,26 +203,22 @@ public class RetrospectiveDAOTest {
             Sprint sprint = new Sprint(new Date(), new Date(), project);
             sprintDAO.create(sprint);
             Retrospective retrospective = new Retrospective(sprint, "Итоги спринта",
-                    Arrays.asList("Улучшить планирование"), Arrays.asList("Хорошая работа"));
+                    Arrays.asList("Улучшить планирование"), Arrays.asList("Хорошая командная работа"));
             log.info("testUpdateRetrospective [1] Создание ретроспективы");
             retrospectiveDAO.create(retrospective);
             Integer id = retrospective.getId();
 
             retrospective.setSummary("Обновленные итоги");
-            retrospective.setImprovements(Arrays.asList("Новое улучшение"));
+            retrospective.setImprovements(Arrays.asList("Новые улучшения"));
             log.info("testUpdateRetrospective [2] Обновление ретроспективы");
             retrospectiveDAO.update(retrospective);
 
             log.info("testUpdateRetrospective [3] Проверка обновленной ретроспективы");
-            try (jakarta.persistence.EntityManager em = ru.sfedu.agileflow.config.DatabaseConfig.getEntityManager()) {
-                Retrospective updated = em.find(Retrospective.class, id);
-                assertNotNull("Ретроспектива должна быть найдена", updated);
-                // Инициализируем коллекцию improvements в пределах сессии
-                updated.getImprovements().size(); // Заставляем Hibernate загрузить коллекцию
-                assertEquals("Итоги должны быть обновлены", "Обновленные итоги", updated.getSummary());
-                assertEquals("Улучшения должны быть обновлены", Arrays.asList("Новое улучшение"), updated.getImprovements());
-                log.info("testUpdateRetrospective [4] Ретроспектива успешно обновлена");
-            }
+            Optional<Retrospective> updated = retrospectiveDAO.findById(id);
+            assertTrue("Ретроспектива должна быть найдена", updated.isPresent());
+            assertEquals("Сводка должна быть обновлена", "Обновленные итоги", updated.get().getSummary());
+            assertEquals("Улучшения должны быть обновлены", Arrays.asList("Новые улучшения"), updated.get().getImprovements());
+            log.info("testUpdateRetrospective [4] Ретроспектива успешно обновлена");
             log.info(String.format(Constants.LOG_METHOD_END, methodName));
         } catch (Exception e) {
             log.error(String.format(Constants.LOG_ERROR, methodName, "Не удалось обновить ретроспективу: " + e.getMessage()), e);
@@ -232,7 +240,7 @@ public class RetrospectiveDAOTest {
             Sprint sprint = new Sprint(new Date(), new Date(), project);
             sprintDAO.create(sprint);
             Retrospective retrospective = new Retrospective(sprint, "Итоги спринта",
-                    Arrays.asList("Улучшить планирование"), Arrays.asList("Хорошая работа"));
+                    Arrays.asList("Улучшить планирование"), Arrays.asList("Хорошая командная работа"));
             log.info("testDeleteRetrospective [1] Создание ретроспективы");
             retrospectiveDAO.create(retrospective);
             Integer id = retrospective.getId();
@@ -248,6 +256,56 @@ public class RetrospectiveDAOTest {
         } catch (Exception e) {
             log.error(String.format(Constants.LOG_ERROR, methodName, "Не удалось удалить ретроспективу: " + e.getMessage()), e);
             fail("Не удалось удалить ретроспективу: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Тестирование поиска ретроспективы по спринту.
+     * Тип: Позитивный
+     */
+    @Test
+    public void testFindBySprintId() {
+        String methodName = "testFindBySprintId";
+        log.info(String.format(Constants.LOG_METHOD_START, methodName));
+        try {
+            Project project = new Project("Тестовый проект", "Описание");
+            projectDAO.create(project);
+            Sprint sprint = new Sprint(new Date(), new Date(), project);
+            sprintDAO.create(sprint);
+            Retrospective retrospective = new Retrospective(sprint, "Итоги спринта",
+                    Arrays.asList("Улучшить планирование"), Arrays.asList("Хорошая командная работа"));
+            log.info("testFindBySprintId [1] Создание ретроспективы");
+            retrospectiveDAO.create(retrospective);
+
+            log.info("testFindBySprintId [2] Поиск ретроспективы по ID спринта: " + sprint.getId());
+            Optional<Retrospective> found = retrospectiveDAO.findBySprintId(sprint.getId());
+            assertTrue("Ретроспектива должна быть найдена", found.isPresent());
+            assertEquals("Сводка должна совпадать", "Итоги спринта", found.get().getSummary());
+            log.info("testFindBySprintId [3] Ретроспектива успешно найдена");
+            log.info(String.format(Constants.LOG_METHOD_END, methodName));
+        } catch (Exception e) {
+            log.error(String.format(Constants.LOG_ERROR, methodName, "Не удалось найти ретроспективу: " + e.getMessage()), e);
+            fail("Не удалось найти ретроспективу: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Тестирование поиска ретроспективы по несуществующему спринту.
+     * Тип: Негативный
+     */
+    @Test
+    public void testFindBySprintIdNotFound() {
+        String methodName = "testFindBySprintIdNotFound";
+        log.info(String.format(Constants.LOG_METHOD_START, methodName));
+        try {
+            log.info("testFindBySprintIdNotFound [1] Поиск ретроспективы по ID спринта: 999");
+            Optional<Retrospective> found = retrospectiveDAO.findBySprintId(999);
+            assertFalse("Ретроспектива не должна быть найдена", found.isPresent());
+            log.info("testFindBySprintIdNotFound [2] Ретроспектива не найдена, как ожидалось");
+            log.info(String.format(Constants.LOG_METHOD_END, methodName));
+        } catch (Exception e) {
+            log.error(String.format(Constants.LOG_ERROR, methodName, "Не удалось выполнить поиск: " + e.getMessage()), e);
+            fail("Не удалось выполнить поиск: " + e.getMessage());
         }
     }
 }

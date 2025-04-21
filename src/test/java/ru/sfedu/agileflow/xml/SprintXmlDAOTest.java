@@ -1,14 +1,15 @@
-package ru.sfedu.agileflow.dao;
+package ru.sfedu.agileflow.xml;
 
 import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import ru.sfedu.agileflow.config.XmlConfig;
 import ru.sfedu.agileflow.constants.Constants;
 import ru.sfedu.agileflow.models.Project;
 import ru.sfedu.agileflow.models.Sprint;
 
-import java.text.SimpleDateFormat;
+import java.io.File;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -16,12 +17,12 @@ import java.util.Optional;
 import static org.junit.Assert.*;
 
 /**
- * Тестовый класс для проверки операций DAO со спринтами.
+ * Тестовый класс для проверки операций XML DAO со спринтами.
  */
-public class SprintDAOTest {
-    private static final Logger log = Logger.getLogger(SprintDAOTest.class);
-    private SprintDAO sprintDAO;
-    private ProjectDAO projectDAO;
+public class SprintXmlDAOTest {
+    private static final Logger log = Logger.getLogger(SprintXmlDAOTest.class);
+    private SprintXmlDAO sprintDAO;
+    private ProjectXmlDAO projectDAO;
 
     /**
      * Подготовка перед каждым тестом.
@@ -30,9 +31,9 @@ public class SprintDAOTest {
     public void setUp() {
         String methodName = "setUp";
         log.info(String.format(Constants.LOG_METHOD_START, methodName));
-        sprintDAO = new SprintDAO();
-        projectDAO = new ProjectDAO();
-        log.info("setUp [1] Инициализация DAO завершена");
+        sprintDAO = new SprintXmlDAO();
+        projectDAO = new ProjectXmlDAO();
+        log.info("setUp [1] Инициализация SprintXmlDAO и ProjectXmlDAO завершена");
         log.info(String.format(Constants.LOG_METHOD_END, methodName));
     }
 
@@ -52,7 +53,15 @@ public class SprintDAOTest {
             for (Project project : projects) {
                 projectDAO.delete(project.getId());
             }
-            log.info("tearDown [1] Все спринты и проекты удалены");
+            File sprintFile = new File(XmlConfig.getFilePath(Sprint.class));
+            File projectFile = new File(XmlConfig.getFilePath(Project.class));
+            if (sprintFile.exists()) {
+                sprintFile.delete();
+            }
+            if (projectFile.exists()) {
+                projectFile.delete();
+            }
+            log.info("tearDown [1] Все спринты и проекты удалены, XML файлы очищены");
             log.info(String.format(Constants.LOG_METHOD_END, methodName));
         } catch (Exception e) {
             log.error(String.format(Constants.LOG_ERROR, methodName, "Не удалось очистить данные: " + e.getMessage()), e);
@@ -174,16 +183,14 @@ public class SprintDAOTest {
             sprintDAO.create(sprint);
             Integer id = sprint.getId();
 
-            Date newEndDate = new Date(System.currentTimeMillis() + 86400000);
-            sprint.setEndDate(newEndDate);
+            sprint.setEndDate(new Date(System.currentTimeMillis() + 86400000));
             log.info("testUpdateSprint [2] Обновление спринта");
             sprintDAO.update(sprint);
 
             log.info("testUpdateSprint [3] Проверка обновленного спринта");
             Optional<Sprint> updated = sprintDAO.findById(id);
             assertTrue("Спринт должен быть найден", updated.isPresent());
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-            assertEquals("Дата окончания должна быть обновлена", sdf.format(newEndDate), sdf.format(updated.get().getEndDate()));
+            assertEquals("Дата окончания должна быть обновлена", sprint.getEndDate(), updated.get().getEndDate());
             log.info("testUpdateSprint [4] Спринт успешно обновлен");
             log.info(String.format(Constants.LOG_METHOD_END, methodName));
         } catch (Exception e) {
@@ -219,6 +226,55 @@ public class SprintDAOTest {
         } catch (Exception e) {
             log.error(String.format(Constants.LOG_ERROR, methodName, "Не удалось удалить спринт: " + e.getMessage()), e);
             fail("Не удалось удалить спринт: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Тестирование поиска спринтов по дате начала.
+     * Тип: Позитивный
+     */
+    @Test
+    public void testFindByStartDate() {
+        String methodName = "testFindByStartDate";
+        log.info(String.format(Constants.LOG_METHOD_START, methodName));
+        try {
+            Project project = new Project("Тестовый проект", "Описание");
+            projectDAO.create(project);
+            Date startDate = new Date();
+            Sprint sprint1 = new Sprint(startDate, new Date(), project);
+            Sprint sprint2 = new Sprint(startDate, new Date(), project);
+            log.info("testFindByStartDate [1] Создание двух спринтов");
+            sprintDAO.create(sprint1);
+            sprintDAO.create(sprint2);
+
+            log.info("testFindByStartDate [2] Поиск спринтов по дате начала");
+            List<Sprint> sprints = sprintDAO.findByStartDate(startDate);
+            assertEquals("Должно быть найдено 2 спринта", 2, sprints.size());
+            log.info("testFindByStartDate [3] Найдено спринтов: " + sprints.size());
+            log.info(String.format(Constants.LOG_METHOD_END, methodName));
+        } catch (Exception e) {
+            log.error(String.format(Constants.LOG_ERROR, methodName, "Не удалось найти спринты: " + e.getMessage()), e);
+            fail("Не удалось найти спринты: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Тестирование поиска спринтов по несуществующей дате.
+     * Тип: Негативный
+     */
+    @Test
+    public void testFindByStartDateNotFound() {
+        String methodName = "testFindByStartDateNotFound";
+        log.info(String.format(Constants.LOG_METHOD_START, methodName));
+        try {
+            log.info("testFindByStartDateNotFound [1] Поиск спринтов по несуществующей дате");
+            List<Sprint> sprints = sprintDAO.findByStartDate(new Date(0));
+            assertTrue("Список спринтов должен быть пуст", sprints.isEmpty());
+            log.info("testFindByStartDateNotFound [2] Спринты не найдены, как ожидалось");
+            log.info(String.format(Constants.LOG_METHOD_END, methodName));
+        } catch (Exception e) {
+            log.error(String.format(Constants.LOG_ERROR, methodName, "Не удалось выполнить поиск: " + e.getMessage()), e);
+            fail("Не удалось выполнить поиск: " + e.getMessage());
         }
     }
 }

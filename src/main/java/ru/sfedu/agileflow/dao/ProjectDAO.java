@@ -1,13 +1,14 @@
 package ru.sfedu.agileflow.dao;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
 import org.apache.log4j.Logger;
 import ru.sfedu.agileflow.config.DatabaseConfig;
 import ru.sfedu.agileflow.constants.Constants;
 import ru.sfedu.agileflow.models.Project;
 
-import java.sql.*;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * DAO-класс для управления проектами в базе данных.
@@ -25,23 +26,14 @@ public class ProjectDAO implements GenericDAO<Project, Integer> {
         log.info(String.format(Constants.LOG_METHOD_START, methodName));
         log.debug(String.format(Constants.LOG_METHOD_DEBUG, methodName, project.toString()));
 
-        String sql = "INSERT INTO projects (name, description) VALUES (?, ?)";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            stmt.setString(1, project.getName());
-            stmt.setString(2, project.getDescription());
-
+        try (EntityManager em = DatabaseConfig.getEntityManager()) {
+            em.getTransaction().begin();
             log.info(String.format(Constants.LOG_DB_OPERATION, methodName));
-            int rowsAffected = stmt.executeUpdate();
-            log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Rows affected: " + rowsAffected));
-
-            try (ResultSet rs = stmt.getGeneratedKeys()) {
-                if (rs.next()) {
-                    project.setId(rs.getInt(1));
-                }
-            }
+            em.persist(project);
+            em.getTransaction().commit();
+            log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Project persisted with ID: " + project.getId()));
             log.info(String.format(Constants.LOG_METHOD_END, methodName));
-        } catch (SQLException e) {
+        } catch (Exception e) {
             log.error(String.format(Constants.LOG_ERROR, methodName, e.getMessage()));
             throw new RuntimeException("Failed to create project", e);
         }
@@ -50,34 +42,21 @@ public class ProjectDAO implements GenericDAO<Project, Integer> {
     /**
      * Находит проект по идентификатору.
      * @param id Идентификатор проекта
-     * @return Проект или null, если не найден
+     * @return Optional с проектом, если найден, иначе пустой Optional
      */
     @Override
-    public Project findById(Integer id) {
+    public Optional<Project> findById(Integer id) {
         String methodName = "findById";
         log.info(String.format(Constants.LOG_METHOD_START, methodName));
         log.debug(String.format(Constants.LOG_METHOD_DEBUG, methodName, "id: " + id));
 
-        String sql = "SELECT * FROM projects WHERE id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, id);
-
+        try (EntityManager em = DatabaseConfig.getEntityManager()) {
             log.info(String.format(Constants.LOG_DB_OPERATION, methodName));
-            try (ResultSet rs = stmt.executeQuery()) {
-                log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Query executed"));
-                if (rs.next()) {
-                    Project project = new Project();
-                    project.setId(rs.getInt("id"));
-                    project.setName(rs.getString("name"));
-                    project.setDescription(rs.getString("description"));
-                    log.info(String.format(Constants.LOG_METHOD_END, methodName));
-                    return project;
-                }
-            }
+            Project project = em.find(Project.class, id);
+            log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, project != null ? "Project found" : "Project not found"));
             log.info(String.format(Constants.LOG_METHOD_END, methodName));
-            return null;
-        } catch (SQLException e) {
+            return Optional.ofNullable(project);
+        } catch (Exception e) {
             log.error(String.format(Constants.LOG_ERROR, methodName, e.getMessage()));
             throw new RuntimeException("Failed to find project by id", e);
         }
@@ -92,23 +71,14 @@ public class ProjectDAO implements GenericDAO<Project, Integer> {
         String methodName = "findAll";
         log.info(String.format(Constants.LOG_METHOD_START, methodName));
 
-        List<Project> projects = new ArrayList<>();
-        String sql = "SELECT * FROM projects";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+        try (EntityManager em = DatabaseConfig.getEntityManager()) {
             log.info(String.format(Constants.LOG_DB_OPERATION, methodName));
-            while (rs.next()) {
-                Project project = new Project();
-                project.setId(rs.getInt("id"));
-                project.setName(rs.getString("name"));
-                project.setDescription(rs.getString("description"));
-                projects.add(project);
-            }
+            TypedQuery<Project> query = em.createQuery("SELECT p FROM Project p", Project.class);
+            List<Project> projects = query.getResultList();
             log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Found " + projects.size() + " projects"));
             log.info(String.format(Constants.LOG_METHOD_END, methodName));
             return projects;
-        } catch (SQLException e) {
+        } catch (Exception e) {
             log.error(String.format(Constants.LOG_ERROR, methodName, e.getMessage()));
             throw new RuntimeException("Failed to retrieve all projects", e);
         }
@@ -124,18 +94,14 @@ public class ProjectDAO implements GenericDAO<Project, Integer> {
         log.info(String.format(Constants.LOG_METHOD_START, methodName));
         log.debug(String.format(Constants.LOG_METHOD_DEBUG, methodName, project.toString()));
 
-        String sql = "UPDATE projects SET name = ?, description = ? WHERE id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, project.getName());
-            stmt.setString(2, project.getDescription());
-            stmt.setInt(3, project.getId());
-
+        try (EntityManager em = DatabaseConfig.getEntityManager()) {
+            em.getTransaction().begin();
             log.info(String.format(Constants.LOG_DB_OPERATION, methodName));
-            int rowsAffected = stmt.executeUpdate();
-            log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Rows affected: " + rowsAffected));
+            em.merge(project);
+            em.getTransaction().commit();
+            log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Project updated"));
             log.info(String.format(Constants.LOG_METHOD_END, methodName));
-        } catch (SQLException e) {
+        } catch (Exception e) {
             log.error(String.format(Constants.LOG_ERROR, methodName, e.getMessage()));
             throw new RuntimeException("Failed to update project", e);
         }
@@ -151,16 +117,17 @@ public class ProjectDAO implements GenericDAO<Project, Integer> {
         log.info(String.format(Constants.LOG_METHOD_START, methodName));
         log.debug(String.format(Constants.LOG_METHOD_DEBUG, methodName, "id: " + id));
 
-        String sql = "DELETE FROM projects WHERE id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, id);
-
+        try (EntityManager em = DatabaseConfig.getEntityManager()) {
+            em.getTransaction().begin();
             log.info(String.format(Constants.LOG_DB_OPERATION, methodName));
-            int rowsAffected = stmt.executeUpdate();
-            log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Rows affected: " + rowsAffected));
+            Project project = em.find(Project.class, id);
+            if (project != null) {
+                em.remove(project);
+            }
+            em.getTransaction().commit();
+            log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, project != null ? "Project deleted" : "Project not found"));
             log.info(String.format(Constants.LOG_METHOD_END, methodName));
-        } catch (SQLException e) {
+        } catch (Exception e) {
             log.error(String.format(Constants.LOG_ERROR, methodName, e.getMessage()));
             throw new RuntimeException("Failed to delete project", e);
         }

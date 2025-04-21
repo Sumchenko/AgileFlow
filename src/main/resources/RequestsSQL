@@ -36,7 +36,7 @@ CREATE TABLE tasks (
     id SERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     description TEXT,
-    status VARCHAR(20) NOT NULL, -- TODO, IN_PROGRESS, DONE
+    status VARCHAR(20) NOT NULL, -- TO_DO, IN_PROGRESS, DONE
     priority INT NOT NULL,
     sprint_id INT REFERENCES sprints(id) ON DELETE CASCADE,
     assigned_user_id INT REFERENCES users(id) ON DELETE SET NULL

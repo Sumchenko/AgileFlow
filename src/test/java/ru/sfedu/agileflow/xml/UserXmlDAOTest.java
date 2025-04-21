@@ -1,12 +1,14 @@
-package ru.sfedu.agileflow.dao;
+package ru.sfedu.agileflow.xml;
 
 import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import ru.sfedu.agileflow.config.XmlConfig;
 import ru.sfedu.agileflow.constants.Constants;
 import ru.sfedu.agileflow.models.User;
 
+import java.io.File;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -14,11 +16,11 @@ import java.util.Optional;
 import static org.junit.Assert.*;
 
 /**
- * Тестовый класс для проверки операций DAO с пользователями.
+ * Тестовый класс для проверки операций XML DAO с пользователями.
  */
-public class UserDAOTest {
-    private static final Logger log = Logger.getLogger(UserDAOTest.class);
-    private UserDAO userDAO;
+public class UserXmlDAOTest {
+    private static final Logger log = Logger.getLogger(UserXmlDAOTest.class);
+    private UserXmlDAO userDAO;
 
     /**
      * Подготовка перед каждым тестом.
@@ -27,8 +29,8 @@ public class UserDAOTest {
     public void setUp() {
         String methodName = "setUp";
         log.info(String.format(Constants.LOG_METHOD_START, methodName));
-        userDAO = new UserDAO();
-        log.info("setUp [1] Инициализация UserDAO завершена");
+        userDAO = new UserXmlDAO();
+        log.info("setUp [1] Инициализация UserXmlDAO завершена");
         log.info(String.format(Constants.LOG_METHOD_END, methodName));
     }
 
@@ -44,7 +46,11 @@ public class UserDAOTest {
             for (User user : users) {
                 userDAO.delete(user.getId());
             }
-            log.info("tearDown [1] Все пользователи удалены");
+            File file = new File(XmlConfig.getFilePath(User.class));
+            if (file.exists()) {
+                file.delete();
+            }
+            log.info("tearDown [1] Все пользователи удалены, XML файл очищен");
             log.info(String.format(Constants.LOG_METHOD_END, methodName));
         } catch (Exception e) {
             log.error(String.format(Constants.LOG_ERROR, methodName, "Не удалось очистить данные: " + e.getMessage()), e);
@@ -60,7 +66,7 @@ public class UserDAOTest {
         String methodName = "testCreateUser";
         log.info(String.format(Constants.LOG_METHOD_START, methodName));
         try {
-            User user = new User("Тестовый пользователь", "test@example.com", "Био", true, new Date());
+            User user = new User("Тестовый пользователь", "test@example.com", "Биография", true, new Date());
             log.info("testCreateUser [1] Создание пользователя");
             userDAO.create(user);
             assertNotNull("Идентификатор пользователя должен быть установлен", user.getId());
@@ -81,7 +87,7 @@ public class UserDAOTest {
         String methodName = "testFindById";
         log.info(String.format(Constants.LOG_METHOD_START, methodName));
         try {
-            User user = new User("Тестовый пользователь", "test@example.com", "Био", true, new Date());
+            User user = new User("Тестовый пользователь", "test@example.com", "Биография", true, new Date());
             log.info("testFindById [1] Создание пользователя");
             userDAO.create(user);
             Integer id = user.getId();
@@ -119,51 +125,6 @@ public class UserDAOTest {
     }
 
     /**
-     * Тестирование поиска пользователя по email.
-     * Тип: Позитивный
-     */
-    @Test
-    public void testFindByEmail() {
-        String methodName = "testFindByEmail";
-        log.info(String.format(Constants.LOG_METHOD_START, methodName));
-        try {
-            User user = new User("Тестовый пользователь", "test@example.com", "Био", true, new Date());
-            log.info("testFindByEmail [1] Создание пользователя");
-            userDAO.create(user);
-
-            log.info("testFindByEmail [2] Поиск пользователя по email: test@example.com");
-            Optional<User> found = userDAO.findByEmail("test@example.com");
-            assertTrue("Пользователь должен быть найден", found.isPresent());
-            assertEquals("Имя пользователя должно совпадать", "Тестовый пользователь", found.get().getName());
-            log.info("testFindByEmail [3] Пользователь успешно найден");
-            log.info(String.format(Constants.LOG_METHOD_END, methodName));
-        } catch (Exception e) {
-            log.error(String.format(Constants.LOG_ERROR, methodName, "Не удалось найти пользователя по email: " + e.getMessage()), e);
-            fail("Не удалось найти пользователя по email: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Тестирование поиска пользователя по несуществующему email.
-     * Тип: Негативный
-     */
-    @Test
-    public void testFindByEmailNotFound() {
-        String methodName = "testFindByEmailNotFound";
-        log.info(String.format(Constants.LOG_METHOD_START, methodName));
-        try {
-            log.info("testFindByEmailNotFound [1] Поиск пользователя по email: nonexistent@example.com");
-            Optional<User> found = userDAO.findByEmail("nonexistent@example.com");
-            assertFalse("Пользователь не должен быть найден", found.isPresent());
-            log.info("testFindByEmailNotFound [2] Пользователь не найден, как ожидалось");
-            log.info(String.format(Constants.LOG_METHOD_END, methodName));
-        } catch (Exception e) {
-            log.error(String.format(Constants.LOG_ERROR, methodName, "Не удалось выполнить поиск: " + e.getMessage()), e);
-            fail("Не удалось выполнить поиск: " + e.getMessage());
-        }
-    }
-
-    /**
      * Тестирование получения списка всех пользователей.
      * Тип: Позитивный
      */
@@ -172,8 +133,8 @@ public class UserDAOTest {
         String methodName = "testFindAll";
         log.info(String.format(Constants.LOG_METHOD_START, methodName));
         try {
-            User user1 = new User("Пользователь 1", "user1@example.com", "Био 1", true, new Date());
-            User user2 = new User("Пользователь 2", "user2@example.com", "Био 2", true, new Date());
+            User user1 = new User("Пользователь 1", "user1@example.com", "Биография 1", true, new Date());
+            User user2 = new User("Пользователь 2", "user2@example.com", "Биография 2", true, new Date());
             log.info("testFindAll [1] Создание двух пользователей");
             userDAO.create(user1);
             userDAO.create(user2);
@@ -198,13 +159,13 @@ public class UserDAOTest {
         String methodName = "testUpdateUser";
         log.info(String.format(Constants.LOG_METHOD_START, methodName));
         try {
-            User user = new User("Тестовый пользователь", "test@example.com", "Био", true, new Date());
+            User user = new User("Тестовый пользователь", "test@example.com", "Биография", true, new Date());
             log.info("testUpdateUser [1] Создание пользователя");
             userDAO.create(user);
             Integer id = user.getId();
 
             user.setName("Обновленный пользователь");
-            user.setBio("Новое био");
+            user.setEmail("updated@example.com");
             log.info("testUpdateUser [2] Обновление пользователя");
             userDAO.update(user);
 
@@ -212,7 +173,7 @@ public class UserDAOTest {
             Optional<User> updated = userDAO.findById(id);
             assertTrue("Пользователь должен быть найден", updated.isPresent());
             assertEquals("Имя должно быть обновлено", "Обновленный пользователь", updated.get().getName());
-            assertEquals("Био должно быть обновлено", "Новое био", updated.get().getBio());
+            assertEquals("Email должен быть обновлен", "updated@example.com", updated.get().getEmail());
             log.info("testUpdateUser [4] Пользователь успешно обновлен");
             log.info(String.format(Constants.LOG_METHOD_END, methodName));
         } catch (Exception e) {
@@ -230,7 +191,7 @@ public class UserDAOTest {
         String methodName = "testDeleteUser";
         log.info(String.format(Constants.LOG_METHOD_START, methodName));
         try {
-            User user = new User("Тестовый пользователь", "test@example.com", "Био", true, new Date());
+            User user = new User("Тестовый пользователь", "test@example.com", "Биография", true, new Date());
             log.info("testDeleteUser [1] Создание пользователя");
             userDAO.create(user);
             Integer id = user.getId();
@@ -246,6 +207,51 @@ public class UserDAOTest {
         } catch (Exception e) {
             log.error(String.format(Constants.LOG_ERROR, methodName, "Не удалось удалить пользователя: " + e.getMessage()), e);
             fail("Не удалось удалить пользователя: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Тестирование поиска пользователя по email.
+     * Тип: Позитивный
+     */
+    @Test
+    public void testFindByEmail() {
+        String methodName = "testFindByEmail";
+        log.info(String.format(Constants.LOG_METHOD_START, methodName));
+        try {
+            User user = new User("Тестовый пользователь", "test@example.com", "Биография", true, new Date());
+            log.info("testFindByEmail [1] Создание пользователя");
+            userDAO.create(user);
+
+            log.info("testFindByEmail [2] Поиск пользователя по email: test@example.com");
+            Optional<User> found = userDAO.findByEmail("test@example.com");
+            assertTrue("Пользователь должен быть найден", found.isPresent());
+            assertEquals("Имя пользователя должно совпадать", "Тестовый пользователь", found.get().getName());
+            log.info("testFindByEmail [3] Пользователь успешно найден");
+            log.info(String.format(Constants.LOG_METHOD_END, methodName));
+        } catch (Exception e) {
+            log.error(String.format(Constants.LOG_ERROR, methodName, "Не удалось найти пользователя: " + e.getMessage()), e);
+            fail("Не удалось найти пользователя: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Тестирование поиска пользователя по несуществующему email.
+     * Тип: Негативный
+     */
+    @Test
+    public void testFindByEmailNotFound() {
+        String methodName = "testFindByEmailNotFound";
+        log.info(String.format(Constants.LOG_METHOD_START, methodName));
+        try {
+            log.info("testFindByEmailNotFound [1] Поиск пользователя по email: nonexistent@example.com");
+            Optional<User> found = userDAO.findByEmail("nonexistent@example.com");
+            assertFalse("Пользователь не должен быть найден", found.isPresent());
+            log.info("testFindByEmailNotFound [2] Пользователь не найден, как ожидалось");
+            log.info(String.format(Constants.LOG_METHOD_END, methodName));
+        } catch (Exception e) {
+            log.error(String.format(Constants.LOG_ERROR, methodName, "Не удалось выполнить поиск: " + e.getMessage()), e);
+            fail("Не удалось выполнить поиск: " + e.getMessage());
         }
     }
 }

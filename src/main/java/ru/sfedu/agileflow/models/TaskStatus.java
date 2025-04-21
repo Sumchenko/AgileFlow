@@ -1,7 +1,7 @@
 package ru.sfedu.agileflow.models;
 
 public enum TaskStatus {
-    TODO,
+    TO_DO,
     IN_PROGRESS,
     DONE
 }

@@ -1,31 +1,41 @@
 package ru.sfedu.agileflow.models;
 
 import jakarta.persistence.*;
+import jakarta.xml.bind.annotation.*;
 
 @Entity
 @Table(name = "tasks")
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.FIELD)
 public class Task {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @XmlAttribute
     private int id;
 
+    @XmlElement
     private String title;
+
+    @XmlElement
     private String description;
 
     @Enumerated(EnumType.STRING)
+    @XmlElement
     private TaskStatus status;
 
+    @XmlElement
     private int priority;
 
     @ManyToOne
     @JoinColumn(name = "sprint_id")
+    @XmlElement
     private Sprint sprint;
 
     @ManyToOne
     @JoinColumn(name = "assigned_user_id")
+    @XmlElement
     private User assignedUser;
 
-    // Конструкторы
     public Task() {
     }
 
@@ -92,5 +102,17 @@ public class Task {
 
     public void setAssignedUser(User assignedUser) {
         this.assignedUser = assignedUser;
+    }
+
+    @Override
+    public String toString() {
+        return "Task{" +
+                "id=" + id +
+                ", title='" + title + '\'' +
+                ", status=" + status +
+                ", priority=" + priority +
+                ", sprintId=" + (sprint != null ? sprint.getId() : null) +
+                ", assignedUserId=" + (assignedUser != null ? assignedUser.getId() : null) +
+                '}';
     }
 }

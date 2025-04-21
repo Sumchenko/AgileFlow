@@ -1,21 +1,20 @@
 package ru.sfedu.agileflow.dao;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
 import org.apache.log4j.Logger;
 import ru.sfedu.agileflow.config.DatabaseConfig;
 import ru.sfedu.agileflow.constants.Constants;
-import ru.sfedu.agileflow.models.Project;
 import ru.sfedu.agileflow.models.Sprint;
 
-import java.sql.*;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * DAO-класс для управления спринтами в базе данных.
  */
 public class SprintDAO implements GenericDAO<Sprint, Integer> {
     private static final Logger log = Logger.getLogger(SprintDAO.class);
-    private final ProjectDAO projectDAO = new ProjectDAO();
 
     /**
      * Создает новый спринт в базе данных.
@@ -27,24 +26,14 @@ public class SprintDAO implements GenericDAO<Sprint, Integer> {
         log.info(String.format(Constants.LOG_METHOD_START, methodName));
         log.debug(String.format(Constants.LOG_METHOD_DEBUG, methodName, sprint.toString()));
 
-        String sql = "INSERT INTO sprints (start_date, end_date, project_id) VALUES (?, ?, ?)";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            stmt.setDate(1, new java.sql.Date(sprint.getStartDate().getTime()));
-            stmt.setDate(2, new java.sql.Date(sprint.getEndDate().getTime()));
-            stmt.setInt(3, sprint.getProject().getId());
-
+        try (EntityManager em = DatabaseConfig.getEntityManager()) {
+            em.getTransaction().begin();
             log.info(String.format(Constants.LOG_DB_OPERATION, methodName));
-            int rowsAffected = stmt.executeUpdate();
-            log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Rows affected: " + rowsAffected));
-
-            try (ResultSet rs = stmt.getGeneratedKeys()) {
-                if (rs.next()) {
-                    sprint.setId(rs.getInt(1));
-                }
-            }
+            em.persist(sprint);
+            em.getTransaction().commit();
+            log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Sprint persisted with ID: " + sprint.getId()));
             log.info(String.format(Constants.LOG_METHOD_END, methodName));
-        } catch (SQLException e) {
+        } catch (Exception e) {
             log.error(String.format(Constants.LOG_ERROR, methodName, e.getMessage()));
             throw new RuntimeException("Failed to create sprint", e);
         }
@@ -53,36 +42,21 @@ public class SprintDAO implements GenericDAO<Sprint, Integer> {
     /**
      * Находит спринт по идентификатору.
      * @param id Идентификатор спринта
-     * @return Спринт или null, если не найден
+     * @return Optional с спринтом, если найден, иначе пустой Optional
      */
     @Override
-    public Sprint findById(Integer id) {
+    public Optional<Sprint> findById(Integer id) {
         String methodName = "findById";
         log.info(String.format(Constants.LOG_METHOD_START, methodName));
         log.debug(String.format(Constants.LOG_METHOD_DEBUG, methodName, "id: " + id));
 
-        String sql = "SELECT * FROM sprints WHERE id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, id);
-
+        try (EntityManager em = DatabaseConfig.getEntityManager()) {
             log.info(String.format(Constants.LOG_DB_OPERATION, methodName));
-            try (ResultSet rs = stmt.executeQuery()) {
-                log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Query executed"));
-                if (rs.next()) {
-                    Sprint sprint = new Sprint();
-                    sprint.setId(rs.getInt("id"));
-                    sprint.setStartDate(rs.getDate("start_date"));
-                    sprint.setEndDate(rs.getDate("end_date"));
-                    Project project = projectDAO.findById(rs.getInt("project_id"));
-                    sprint.setProject(project);
-                    log.info(String.format(Constants.LOG_METHOD_END, methodName));
-                    return sprint;
-                }
-            }
+            Sprint sprint = em.find(Sprint.class, id);
+            log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, sprint != null ? "Sprint found" : "Sprint not found"));
             log.info(String.format(Constants.LOG_METHOD_END, methodName));
-            return null;
-        } catch (SQLException e) {
+            return Optional.ofNullable(sprint);
+        } catch (Exception e) {
             log.error(String.format(Constants.LOG_ERROR, methodName, e.getMessage()));
             throw new RuntimeException("Failed to find sprint by id", e);
         }
@@ -97,25 +71,14 @@ public class SprintDAO implements GenericDAO<Sprint, Integer> {
         String methodName = "findAll";
         log.info(String.format(Constants.LOG_METHOD_START, methodName));
 
-        List<Sprint> sprints = new ArrayList<>();
-        String sql = "SELECT * FROM sprints";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+        try (EntityManager em = DatabaseConfig.getEntityManager()) {
             log.info(String.format(Constants.LOG_DB_OPERATION, methodName));
-            while (rs.next()) {
-                Sprint sprint = new Sprint();
-                sprint.setId(rs.getInt("id"));
-                sprint.setStartDate(rs.getDate("start_date"));
-                sprint.setEndDate(rs.getDate("end_date"));
-                Project project = projectDAO.findById(rs.getInt("project_id"));
-                sprint.setProject(project);
-                sprints.add(sprint);
-            }
+            TypedQuery<Sprint> query = em.createQuery("SELECT s FROM Sprint s", Sprint.class);
+            List<Sprint> sprints = query.getResultList();
             log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Found " + sprints.size() + " sprints"));
             log.info(String.format(Constants.LOG_METHOD_END, methodName));
             return sprints;
-        } catch (SQLException e) {
+        } catch (Exception e) {
             log.error(String.format(Constants.LOG_ERROR, methodName, e.getMessage()));
             throw new RuntimeException("Failed to retrieve all sprints", e);
         }
@@ -131,19 +94,14 @@ public class SprintDAO implements GenericDAO<Sprint, Integer> {
         log.info(String.format(Constants.LOG_METHOD_START, methodName));
         log.debug(String.format(Constants.LOG_METHOD_DEBUG, methodName, sprint.toString()));
 
-        String sql = "UPDATE sprints SET start_date = ?, end_date = ?, project_id = ? WHERE id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setDate(1, new java.sql.Date(sprint.getStartDate().getTime()));
-            stmt.setDate(2, new java.sql.Date(sprint.getEndDate().getTime()));
-            stmt.setInt(3, sprint.getProject().getId());
-            stmt.setInt(4, sprint.getId());
-
+        try (EntityManager em = DatabaseConfig.getEntityManager()) {
+            em.getTransaction().begin();
             log.info(String.format(Constants.LOG_DB_OPERATION, methodName));
-            int rowsAffected = stmt.executeUpdate();
-            log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Rows affected: " + rowsAffected));
+            em.merge(sprint);
+            em.getTransaction().commit();
+            log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Sprint updated"));
             log.info(String.format(Constants.LOG_METHOD_END, methodName));
-        } catch (SQLException e) {
+        } catch (Exception e) {
             log.error(String.format(Constants.LOG_ERROR, methodName, e.getMessage()));
             throw new RuntimeException("Failed to update sprint", e);
         }
@@ -159,16 +117,17 @@ public class SprintDAO implements GenericDAO<Sprint, Integer> {
         log.info(String.format(Constants.LOG_METHOD_START, methodName));
         log.debug(String.format(Constants.LOG_METHOD_DEBUG, methodName, "id: " + id));
 
-        String sql = "DELETE FROM sprints WHERE id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, id);
-
+        try (EntityManager em = DatabaseConfig.getEntityManager()) {
+            em.getTransaction().begin();
             log.info(String.format(Constants.LOG_DB_OPERATION, methodName));
-            int rowsAffected = stmt.executeUpdate();
-            log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Rows affected: " + rowsAffected));
+            Sprint sprint = em.find(Sprint.class, id);
+            if (sprint != null) {
+                em.remove(sprint);
+            }
+            em.getTransaction().commit();
+            log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, sprint != null ? "Sprint deleted" : "Sprint not found"));
             log.info(String.format(Constants.LOG_METHOD_END, methodName));
-        } catch (SQLException e) {
+        } catch (Exception e) {
             log.error(String.format(Constants.LOG_ERROR, methodName, e.getMessage()));
             throw new RuntimeException("Failed to delete sprint", e);
         }

@@ -1,23 +1,25 @@
-package ru.sfedu.agileflow.dao;
+package ru.sfedu.agileflow.xml;
 
 import org.apache.log4j.Logger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import ru.sfedu.agileflow.config.XmlConfig;
 import ru.sfedu.agileflow.constants.Constants;
 import ru.sfedu.agileflow.models.Project;
 
+import java.io.File;
 import java.util.List;
 import java.util.Optional;
 
 import static org.junit.Assert.*;
 
 /**
- * Тестовый класс для проверки операций DAO с проектами.
+ * Тестовый класс для проверки операций XML DAO с проектами.
  */
-public class ProjectDAOTest {
-    private static final Logger log = Logger.getLogger(ProjectDAOTest.class);
-    private ProjectDAO projectDAO;
+public class ProjectXmlDAOTest {
+    private static final Logger log = Logger.getLogger(ProjectXmlDAOTest.class);
+    private ProjectXmlDAO projectDAO;
 
     /**
      * Подготовка перед каждым тестом.
@@ -26,8 +28,8 @@ public class ProjectDAOTest {
     public void setUp() {
         String methodName = "setUp";
         log.info(String.format(Constants.LOG_METHOD_START, methodName));
-        projectDAO = new ProjectDAO();
-        log.info("setUp [1] Инициализация ProjectDAO завершена");
+        projectDAO = new ProjectXmlDAO();
+        log.info("setUp [1] Инициализация ProjectXmlDAO завершена");
         log.info(String.format(Constants.LOG_METHOD_END, methodName));
     }
 
@@ -43,7 +45,11 @@ public class ProjectDAOTest {
             for (Project project : projects) {
                 projectDAO.delete(project.getId());
             }
-            log.info("tearDown [1] Все проекты удалены");
+            File file = new File(XmlConfig.getFilePath(Project.class));
+            if (file.exists()) {
+                file.delete();
+            }
+            log.info("tearDown [1] Все проекты удалены, XML файл очищен");
             log.info(String.format(Constants.LOG_METHOD_END, methodName));
         } catch (Exception e) {
             log.error(String.format(Constants.LOG_ERROR, methodName, "Не удалось очистить данные: " + e.getMessage()), e);
@@ -200,6 +206,52 @@ public class ProjectDAOTest {
         } catch (Exception e) {
             log.error(String.format(Constants.LOG_ERROR, methodName, "Не удалось удалить проект: " + e.getMessage()), e);
             fail("Не удалось удалить проект: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Тестирование поиска проектов по имени.
+     * Тип: Позитивный
+     */
+    @Test
+    public void testFindByName() {
+        String methodName = "testFindByName";
+        log.info(String.format(Constants.LOG_METHOD_START, methodName));
+        try {
+            Project project1 = new Project("Тестовый проект 1", "Описание 1");
+            Project project2 = new Project("Тестовый проект 2", "Описание 2");
+            log.info("testFindByName [1] Создание двух проектов");
+            projectDAO.create(project1);
+            projectDAO.create(project2);
+
+            log.info("testFindByName [2] Поиск проектов по имени 'Тестовый'");
+            List<Project> projects = projectDAO.findByName("Тестовый");
+            assertEquals("Должно быть найдено 2 проекта", 2, projects.size());
+            log.info("testFindByName [3] Найдено проектов: " + projects.size());
+            log.info(String.format(Constants.LOG_METHOD_END, methodName));
+        } catch (Exception e) {
+            log.error(String.format(Constants.LOG_ERROR, methodName, "Не удалось найти проекты: " + e.getMessage()), e);
+            fail("Не удалось найти проекты: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Тестирование поиска проектов по несуществующему имени.
+     * Тип: Негативный
+     */
+    @Test
+    public void testFindByNameNotFound() {
+        String methodName = "testFindByNameNotFound";
+        log.info(String.format(Constants.LOG_METHOD_START, methodName));
+        try {
+            log.info("testFindByNameNotFound [1] Поиск проектов по имени 'Несуществующий'");
+            List<Project> projects = projectDAO.findByName("Несуществующий");
+            assertTrue("Список проектов должен быть пуст", projects.isEmpty());
+            log.info("testFindByNameNotFound [2] Проекты не найдены, как ожидалось");
+            log.info(String.format(Constants.LOG_METHOD_END, methodName));
+        } catch (Exception e) {
+            log.error(String.format(Constants.LOG_ERROR, methodName, "Не удалось выполнить поиск: " + e.getMessage()), e);
+            fail("Не удалось выполнить поиск: " + e.getMessage());
         }
     }
 }

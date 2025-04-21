@@ -1,33 +1,44 @@
 package ru.sfedu.agileflow.models;
 
 import jakarta.persistence.*;
+import jakarta.xml.bind.annotation.*;
 import java.util.Date;
 import java.util.List;
 
 @Entity
 @Table(name = "sprints")
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.FIELD)
 public class Sprint {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @XmlAttribute
     private int id;
 
     @Temporal(TemporalType.DATE)
+    @Column(name = "start_date")
+    @XmlElement
     private Date startDate;
 
     @Temporal(TemporalType.DATE)
+    @Column(name = "end_date")
+    @XmlElement
     private Date endDate;
 
     @ManyToOne
     @JoinColumn(name = "project_id")
+    @XmlElement
     private Project project;
 
     @OneToMany(mappedBy = "sprint")
+    @XmlElementWrapper(name = "tasks")
+    @XmlElement(name = "task")
     private List<Task> tasks;
 
     @OneToOne(mappedBy = "sprint")
+    @XmlElement
     private Retrospective retrospective;
 
-    // Конструкторы
     public Sprint() {
     }
 
@@ -83,5 +94,15 @@ public class Sprint {
 
     public void setRetrospective(Retrospective retrospective) {
         this.retrospective = retrospective;
+    }
+
+    @Override
+    public String toString() {
+        return "Sprint{" +
+                "id=" + id +
+                ", startDate=" + startDate +
+                ", endDate=" + endDate +
+                ", projectId=" + (project != null ? project.getId() : null) +
+                '}';
     }
 }

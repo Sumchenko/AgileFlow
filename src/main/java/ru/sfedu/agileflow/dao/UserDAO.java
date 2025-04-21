@@ -1,14 +1,14 @@
 package ru.sfedu.agileflow.dao;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
 import org.apache.log4j.Logger;
 import ru.sfedu.agileflow.config.DatabaseConfig;
 import ru.sfedu.agileflow.constants.Constants;
 import ru.sfedu.agileflow.models.User;
 
-import java.sql.*;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * DAO-класс для управления пользователями в базе данных.
@@ -26,27 +26,14 @@ public class UserDAO implements GenericDAO<User, Integer> {
         log.info(String.format(Constants.LOG_METHOD_START, methodName));
         log.debug(String.format(Constants.LOG_METHOD_DEBUG, methodName, user.toString()));
 
-        String sql = "INSERT INTO users (name, email, bio, is_active, last_login, date_joined) VALUES (?, ?, ?, ?, ?, ?)";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            stmt.setString(1, user.getName());
-            stmt.setString(2, user.getEmail());
-            stmt.setString(3, user.getBio());
-            stmt.setBoolean(4, user.isActive());
-            stmt.setTimestamp(5, user.getLastLogin() != null ? new Timestamp(user.getLastLogin().getTime()) : null);
-            stmt.setTimestamp(6, new Timestamp(user.getDateJoined().getTime()));
-
+        try (EntityManager em = DatabaseConfig.getEntityManager()) {
+            em.getTransaction().begin();
             log.info(String.format(Constants.LOG_DB_OPERATION, methodName));
-            int rowsAffected = stmt.executeUpdate();
-            log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Затронуто строк: " + rowsAffected));
-
-            try (ResultSet rs = stmt.getGeneratedKeys()) {
-                if (rs.next()) {
-                    user.setId(rs.getInt(1));
-                }
-            }
+            em.persist(user);
+            em.getTransaction().commit();
+            log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "User persisted with ID: " + user.getId()));
             log.info(String.format(Constants.LOG_METHOD_END, methodName));
-        } catch (SQLException e) {
+        } catch (Exception e) {
             log.error(String.format(Constants.LOG_ERROR, methodName, e.getMessage()));
             throw new RuntimeException("Не удалось создать пользователя", e);
         }
@@ -55,38 +42,21 @@ public class UserDAO implements GenericDAO<User, Integer> {
     /**
      * Находит пользователя по идентификатору.
      * @param id Идентификатор пользователя
-     * @return Пользователь или null, если не найден
+     * @return Optional с пользователем, если найден, иначе пустой Optional
      */
     @Override
-    public User findById(Integer id) {
+    public Optional<User> findById(Integer id) {
         String methodName = "findById";
         log.info(String.format(Constants.LOG_METHOD_START, methodName));
         log.debug(String.format(Constants.LOG_METHOD_DEBUG, methodName, "id: " + id));
 
-        String sql = "SELECT * FROM users WHERE id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, id);
-
+        try (EntityManager em = DatabaseConfig.getEntityManager()) {
             log.info(String.format(Constants.LOG_DB_OPERATION, methodName));
-            try (ResultSet rs = stmt.executeQuery()) {
-                log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Запрос выполнен"));
-                if (rs.next()) {
-                    User user = new User();
-                    user.setId(rs.getInt("id"));
-                    user.setName(rs.getString("name"));
-                    user.setEmail(rs.getString("email"));
-                    user.setBio(rs.getString("bio"));
-                    user.setActive(rs.getBoolean("is_active"));
-                    user.setLastLogin(rs.getTimestamp("last_login"));
-                    user.setDateJoined(rs.getTimestamp("date_joined"));
-                    log.info(String.format(Constants.LOG_METHOD_END, methodName));
-                    return user;
-                }
-            }
+            User user = em.find(User.class, id);
+            log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, user != null ? "User found" : "User not found"));
             log.info(String.format(Constants.LOG_METHOD_END, methodName));
-            return null;
-        } catch (SQLException e) {
+            return Optional.ofNullable(user);
+        } catch (Exception e) {
             log.error(String.format(Constants.LOG_ERROR, methodName, e.getMessage()));
             throw new RuntimeException("Не удалось найти пользователя по идентификатору", e);
         }
@@ -95,37 +65,22 @@ public class UserDAO implements GenericDAO<User, Integer> {
     /**
      * Находит пользователя по email.
      * @param email Email пользователя
-     * @return Пользователь или null, если не найден
+     * @return Optional с пользователем, если найден, иначе пустой Optional
      */
-    public User findByEmail(String email) {
+    public Optional<User> findByEmail(String email) {
         String methodName = "findByEmail";
         log.info(String.format(Constants.LOG_METHOD_START, methodName));
         log.debug(String.format(Constants.LOG_METHOD_DEBUG, methodName, "email: " + email));
 
-        String sql = "SELECT * FROM users WHERE email = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, email);
-
+        try (EntityManager em = DatabaseConfig.getEntityManager()) {
             log.info(String.format(Constants.LOG_DB_OPERATION, methodName));
-            try (ResultSet rs = stmt.executeQuery()) {
-                log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Запрос выполнен"));
-                if (rs.next()) {
-                    User user = new User();
-                    user.setId(rs.getInt("id"));
-                    user.setName(rs.getString("name"));
-                    user.setEmail(rs.getString("email"));
-                    user.setBio(rs.getString("bio"));
-                    user.setActive(rs.getBoolean("is_active"));
-                    user.setLastLogin(rs.getTimestamp("last_login"));
-                    user.setDateJoined(rs.getTimestamp("date_joined"));
-                    log.info(String.format(Constants.LOG_METHOD_END, methodName));
-                    return user;
-                }
-            }
+            TypedQuery<User> query = em.createQuery("SELECT u FROM User u WHERE u.email = :email", User.class);
+            query.setParameter("email", email);
+            User user = query.getResultList().stream().findFirst().orElse(null);
+            log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, user != null ? "User found" : "User not found"));
             log.info(String.format(Constants.LOG_METHOD_END, methodName));
-            return null;
-        } catch (SQLException e) {
+            return Optional.ofNullable(user);
+        } catch (Exception e) {
             log.error(String.format(Constants.LOG_ERROR, methodName, e.getMessage()));
             throw new RuntimeException("Не удалось найти пользователя по email", e);
         }
@@ -140,27 +95,14 @@ public class UserDAO implements GenericDAO<User, Integer> {
         String methodName = "findAll";
         log.info(String.format(Constants.LOG_METHOD_START, methodName));
 
-        List<User> users = new ArrayList<>();
-        String sql = "SELECT * FROM users";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+        try (EntityManager em = DatabaseConfig.getEntityManager()) {
             log.info(String.format(Constants.LOG_DB_OPERATION, methodName));
-            while (rs.next()) {
-                User user = new User();
-                user.setId(rs.getInt("id"));
-                user.setName(rs.getString("name"));
-                user.setEmail(rs.getString("email"));
-                user.setBio(rs.getString("bio"));
-                user.setActive(rs.getBoolean("is_active"));
-                user.setLastLogin(rs.getTimestamp("last_login"));
-                user.setDateJoined(rs.getTimestamp("date_joined"));
-                users.add(user);
-            }
+            TypedQuery<User> query = em.createQuery("SELECT u FROM User u", User.class);
+            List<User> users = query.getResultList();
             log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Найдено пользователей: " + users.size()));
             log.info(String.format(Constants.LOG_METHOD_END, methodName));
             return users;
-        } catch (SQLException e) {
+        } catch (Exception e) {
             log.error(String.format(Constants.LOG_ERROR, methodName, e.getMessage()));
             throw new RuntimeException("Не удалось получить список всех пользователей", e);
         }
@@ -176,22 +118,14 @@ public class UserDAO implements GenericDAO<User, Integer> {
         log.info(String.format(Constants.LOG_METHOD_START, methodName));
         log.debug(String.format(Constants.LOG_METHOD_DEBUG, methodName, user.toString()));
 
-        String sql = "UPDATE users SET name = ?, email = ?, bio = ?, is_active = ?, last_login = ?, date_joined = ? WHERE id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setString(1, user.getName());
-            stmt.setString(2, user.getEmail());
-            stmt.setString(3, user.getBio());
-            stmt.setBoolean(4, user.isActive());
-            stmt.setTimestamp(5, user.getLastLogin() != null ? new Timestamp(user.getLastLogin().getTime()) : null);
-            stmt.setTimestamp(6, new Timestamp(user.getDateJoined().getTime()));
-            stmt.setInt(7, user.getId());
-
+        try (EntityManager em = DatabaseConfig.getEntityManager()) {
+            em.getTransaction().begin();
             log.info(String.format(Constants.LOG_DB_OPERATION, methodName));
-            int rowsAffected = stmt.executeUpdate();
-            log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Затронуто строк: " + rowsAffected));
+            em.merge(user);
+            em.getTransaction().commit();
+            log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "User updated"));
             log.info(String.format(Constants.LOG_METHOD_END, methodName));
-        } catch (SQLException e) {
+        } catch (Exception e) {
             log.error(String.format(Constants.LOG_ERROR, methodName, e.getMessage()));
             throw new RuntimeException("Не удалось обновить пользователя", e);
         }
@@ -207,16 +141,17 @@ public class UserDAO implements GenericDAO<User, Integer> {
         log.info(String.format(Constants.LOG_METHOD_START, methodName));
         log.debug(String.format(Constants.LOG_METHOD_DEBUG, methodName, "id: " + id));
 
-        String sql = "DELETE FROM users WHERE id = ?";
-        try (Connection conn = DatabaseConfig.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, id);
-
+        try (EntityManager em = DatabaseConfig.getEntityManager()) {
+            em.getTransaction().begin();
             log.info(String.format(Constants.LOG_DB_OPERATION, methodName));
-            int rowsAffected = stmt.executeUpdate();
-            log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, "Затронуто строк: " + rowsAffected));
+            User user = em.find(User.class, id);
+            if (user != null) {
+                em.remove(user);
+            }
+            em.getTransaction().commit();
+            log.debug(String.format(Constants.LOG_DB_DEBUG, methodName, user != null ? "User deleted" : "User not found"));
             log.info(String.format(Constants.LOG_METHOD_END, methodName));
-        } catch (SQLException e) {
+        } catch (Exception e) {
             log.error(String.format(Constants.LOG_ERROR, methodName, e.getMessage()));
             throw new RuntimeException("Не удалось удалить пользователя", e);
         }

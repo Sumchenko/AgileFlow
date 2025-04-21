@@ -1,35 +1,54 @@
 package ru.sfedu.agileflow.models;
 
 import jakarta.persistence.*;
+import jakarta.xml.bind.annotation.*;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 
 @Entity
 @Table(name = "users")
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.FIELD)
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @XmlAttribute
     private int id;
 
+    @XmlElement
     private String name;
+
+    @XmlElement
     private String email;
+
+    @XmlElement
     private String bio;
 
+    @Column(name = "is_active")
+    @XmlElement(name = "isActive")
     private boolean isActive;
 
     @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "last_login")
+    @XmlElement
     private Date lastLogin;
 
     @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "date_joined")
+    @XmlElement
     private Date dateJoined;
 
     @ManyToMany(mappedBy = "users")
+    @XmlElementWrapper(name = "projects")
+    @XmlElement(name = "project")
     private List<Project> projects;
 
     @OneToMany(mappedBy = "assignedUser")
+    @XmlElementWrapper(name = "tasks")
+    @XmlElement(name = "task")
     private List<Task> tasks;
 
-    // Конструкторы
     public User() {
     }
 
@@ -41,7 +60,6 @@ public class User {
         this.dateJoined = dateJoined;
     }
 
-    // Новый конструктор с параметром lastLogin
     public User(String name, String email, String bio, boolean isActive, Date lastLogin, Date dateJoined) {
         this.name = name;
         this.email = email;
@@ -134,5 +152,18 @@ public class User {
                 ", lastLogin=" + lastLogin +
                 ", dateJoined=" + dateJoined +
                 '}';
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        User user = (User) o;
+        return id == user.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }
