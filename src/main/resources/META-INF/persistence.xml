@@ -11,10 +11,10 @@
         <class>ru.sfedu.agileflow.models.Task</class>
         <class>ru.sfedu.agileflow.models.Retrospective</class>
         <properties>
-            <property name="javax.persistence.jdbc.url" value="${db.url}"/>
-            <property name="javax.persistence.jdbc.user" value="${db.username}"/>
-            <property name="javax.persistence.jdbc.password" value="${db.password}"/>
-            <property name="javax.persistence.jdbc.driver" value="${db.driver}"/>
+            <property name="javax.persistence.jdbc.url" value="jdbc:postgresql://localhost:5432/AgileFlow"/>
+            <property name="javax.persistence.jdbc.user" value="postgres"/>
+            <property name="javax.persistence.jdbc.password" value="02052004"/>
+            <property name="javax.persistence.jdbc.driver" value="org.postgresql.Driver"/>
             <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
             <property name="hibernate.hbm2ddl.auto" value="validate"/>
             <property name="hibernate.show_sql" value="true"/>
