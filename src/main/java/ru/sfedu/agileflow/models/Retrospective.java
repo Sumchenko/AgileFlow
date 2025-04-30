@@ -22,14 +22,14 @@ public class Retrospective {
     @XmlElement
     private String summary;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "retrospective_improvements", joinColumns = @JoinColumn(name = "retrospective_id"))
     @Column(name = "improvement")
     @XmlElementWrapper(name = "improvements")
     @XmlElement(name = "improvement")
     private List<String> improvements;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "retrospective_positives", joinColumns = @JoinColumn(name = "retrospective_id"))
     @Column(name = "positive")
     @XmlElementWrapper(name = "positives")

@@ -132,4 +132,5 @@ public class RetrospectiveDAO implements GenericDAO<Retrospective, Integer> {
             throw new RuntimeException("Failed to delete retrospective", e);
         }
     }
+
 }
