@@ -2,19 +2,18 @@
 //
 //import jakarta.persistence.Column;
 //import jakarta.persistence.Embeddable;
+//
 //import java.io.Serializable;
-//import java.util.Objects;
 //
 ///**
-// * Встроенный компонент для TestEntity.
+// * Встроенный компонент, содержащий категорию и приоритет сущности.
 // */
 //@Embeddable
 //public class Details implements Serializable {
-//
-//    @Column(name = "category")
+//    @Column(name = "category", nullable = false)
 //    private String category;
 //
-//    @Column(name = "priority")
+//    @Column(name = "priority", nullable = false)
 //    private Integer priority;
 //
 //    // Конструктор по умолчанию
@@ -44,24 +43,7 @@
 //    }
 //
 //    @Override
-//    public boolean equals(Object o) {
-//        if (this == o) return true;
-//        if (o == null || getClass() != o.getClass()) return false;
-//        Details details = (Details) o;
-//        return Objects.equals(category, details.category) &&
-//                Objects.equals(priority, details.priority);
-//    }
-//
-//    @Override
-//    public int hashCode() {
-//        return Objects.hash(category, priority);
-//    }
-//
-//    @Override
 //    public String toString() {
-//        return "Details{" +
-//                "category='" + category + '\'' +
-//                ", priority=" + priority +
-//                '}';
+//        return "Details{category='" + category + "', priority=" + priority + "}";
 //    }
 //}

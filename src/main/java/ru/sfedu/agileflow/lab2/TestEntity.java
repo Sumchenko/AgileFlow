@@ -3,17 +3,16 @@
 //import jakarta.persistence.*;
 //import java.io.Serializable;
 //import java.util.Date;
-//import java.util.Objects;
 //
 ///**
-// * Сущность для тестирования маппинга Hibernate.
+// * Тестовая сущность для лабораторной работы.
 // */
 //@Entity
-//@Table(name = "test_entities")
+//@Table(name = "test_entity")
 //public class TestEntity implements Serializable {
-//
 //    @Id
 //    @GeneratedValue(strategy = GenerationType.IDENTITY)
+//    @Column(name = "id")
 //    private Long id;
 //
 //    @Column(name = "name", nullable = false)
@@ -22,22 +21,30 @@
 //    @Column(name = "description")
 //    private String description;
 //
-//    @Column(name = "date_created")
-//    @Temporal(TemporalType.TIMESTAMP)
+//    @Column(name = "date_created", nullable = false)
+//    @Temporal(TemporalType.DATE)
 //    private Date dateCreated;
 //
-//    @Column(name = "check_flag")
+//    @Column(name = "check_flag", nullable = false)
 //    private Boolean check;
 //
 //    @Embedded
 //    @AttributeOverrides({
-//            @AttributeOverride(name = "category", column = @Column(name = "details_category")),
-//            @AttributeOverride(name = "priority", column = @Column(name = "details_priority"))
+//            @AttributeOverride(name = "category", column = @Column(name = "entity_category", nullable = false)),
+//            @AttributeOverride(name = "priority", column = @Column(name = "entity_priority", nullable = false))
 //    })
 //    private Details details;
 //
 //    // Конструктор по умолчанию
 //    public TestEntity() {
+//    }
+//
+//    public TestEntity(String name, String description, Date dateCreated, Boolean check, Details details) {
+//        this.name = name;
+//        this.description = description;
+//        this.dateCreated = dateCreated;
+//        this.check = check;
+//        this.details = details;
 //    }
 //
 //    // Геттеры и сеттеры
@@ -90,22 +97,8 @@
 //    }
 //
 //    @Override
-//    public boolean equals(Object o) {
-//        if (this == o) return true;
-//        if (o == null || getClass() != o.getClass()) return false;
-//        TestEntity that = (TestEntity) o;
-//        return Objects.equals(id, that.id);
-//    }
-//
-//    @Override
-//    public int hashCode() {
-//        return Objects.hash(id);
-//    }
-//
-//    @Override
 //    public String toString() {
-//        return "TestEntity{" +
-//                "id=" + id +
+//        return "TestEntity{id=" + id +
 //                ", name='" + name + '\'' +
 //                ", description='" + description + '\'' +
 //                ", dateCreated=" + dateCreated +

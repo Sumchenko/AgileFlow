@@ -4,12 +4,14 @@
              xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence
                                  http://xmlns.jcp.org/xml/ns/persistence/persistence_2_2.xsd"
              version="2.2">
+    <!-- Основная Persistence Unit для существующего приложения -->
     <persistence-unit name="AgileFlowPU" transaction-type="RESOURCE_LOCAL">
         <class>ru.sfedu.agileflow.models.User</class>
         <class>ru.sfedu.agileflow.models.Project</class>
         <class>ru.sfedu.agileflow.models.Sprint</class>
         <class>ru.sfedu.agileflow.models.Task</class>
         <class>ru.sfedu.agileflow.models.Retrospective</class>
+        <exclude-unlisted-classes>true</exclude-unlisted-classes>
         <properties>
             <property name="javax.persistence.jdbc.url" value="jdbc:postgresql://localhost:5432/AgileFlow"/>
             <property name="javax.persistence.jdbc.user" value="postgres"/>
@@ -19,6 +21,132 @@
             <property name="hibernate.hbm2ddl.auto" value="validate"/>
             <property name="hibernate.show_sql" value="true"/>
             <property name="hibernate.format_sql" value="true"/>
+        </properties>
+    </persistence-unit>
+    <!-- Отдельная Persistence Unit для лабораторной работы (Single Table) -->
+    <persistence-unit name="Lab3SingleTablePU" transaction-type="RESOURCE_LOCAL">
+        <class>ru.sfedu.agileflow.lab3.singletable.Task</class>
+        <class>ru.sfedu.agileflow.lab3.singletable.BugTask</class>
+        <class>ru.sfedu.agileflow.lab3.singletable.FeatureTask</class>
+        <exclude-unlisted-classes>true</exclude-unlisted-classes>
+        <properties>
+            <property name="javax.persistence.jdbc.url" value="jdbc:postgresql://localhost:5432/AgileFlow"/>
+            <property name="javax.persistence.jdbc.user" value="postgres"/>
+            <property name="javax.persistence.jdbc.password" value="02052004"/>
+            <property name="javax.persistence.jdbc.driver" value="org.postgresql.Driver"/>
+            <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
+            <property name="hibernate.hbm2ddl.auto" value="update"/>
+            <property name="hibernate.show_sql" value="true"/>
+            <property name="hibernate.format_sql" value="true"/>
+            <property name="hibernate.use_sql_comments" value="true"/>
+            <property name="org.hibernate.SQL" value="DEBUG"/>
+            <property name="org.hibernate.type" value="TRACE"/>
+        </properties>
+    </persistence-unit>
+    <!-- Persistence Unit для лабораторной работы (Table Per Class) -->
+    <persistence-unit name="Lab3TablePerClassPU" transaction-type="RESOURCE_LOCAL">
+        <class>ru.sfedu.agileflow.lab3.tableperclass.Task</class>
+        <class>ru.sfedu.agileflow.lab3.tableperclass.BugTask</class>
+        <class>ru.sfedu.agileflow.lab3.tableperclass.FeatureTask</class>
+        <exclude-unlisted-classes>true</exclude-unlisted-classes>
+        <properties>
+            <property name="javax.persistence.jdbc.url" value="jdbc:postgresql://localhost:5432/AgileFlow"/>
+            <property name="javax.persistence.jdbc.user" value="postgres"/>
+            <property name="javax.persistence.jdbc.password" value="02052004"/>
+            <property name="javax.persistence.jdbc.driver" value="org.postgresql.Driver"/>
+            <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
+            <property name="hibernate.hbm2ddl.auto" value="update"/>
+            <property name="hibernate.show_sql" value="true"/>
+            <property name="hibernate.format_sql" value="true"/>
+            <property name="hibernate.use_sql_comments" value="true"/>
+            <property name="org.hibernate.SQL" value="DEBUG"/>
+            <property name="org.hibernate.type" value="TRACE"/>
+        </properties>
+    </persistence-unit>
+    <!-- Persistence Unit для лабораторной работы (Joined Table) -->
+    <persistence-unit name="Lab3JoinedTablePU" transaction-type="RESOURCE_LOCAL">
+        <class>ru.sfedu.agileflow.lab3.joinedtable.Task</class>
+        <class>ru.sfedu.agileflow.lab3.joinedtable.BugTask</class>
+        <class>ru.sfedu.agileflow.lab3.joinedtable.FeatureTask</class>
+        <exclude-unlisted-classes>true</exclude-unlisted-classes>
+        <properties>
+            <property name="javax.persistence.jdbc.url" value="jdbc:postgresql://localhost:5432/AgileFlow"/>
+            <property name="javax.persistence.jdbc.user" value="postgres"/>
+            <property name="javax.persistence.jdbc.password" value="02052004"/>
+            <property name="javax.persistence.jdbc.driver" value="org.postgresql.Driver"/>
+            <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
+            <property name="hibernate.hbm2ddl.auto" value="update"/>
+            <property name="hibernate.show_sql" value="true"/>
+            <property name="hibernate.format_sql" value="true"/>
+            <property name="hibernate.use_sql_comments" value="true"/>
+            <property name="org.hibernate.SQL" value="DEBUG"/>
+            <property name="org.hibernate.type" value="TRACE"/>
+        </properties>
+    </persistence-unit>
+    <!-- Persistence Unit для лабораторной работы (MappedSuperclass) -->
+    <persistence-unit name="Lab3MappedSuperclassPU" transaction-type="RESOURCE_LOCAL">
+        <class>ru.sfedu.agileflow.lab3.mappedsuperclass.BugTask</class>
+        <class>ru.sfedu.agileflow.lab3.mappedsuperclass.FeatureTask</class>
+        <exclude-unlisted-classes>true</exclude-unlisted-classes>
+        <properties>
+            <property name="javax.persistence.jdbc.url" value="jdbc:postgresql://localhost:5432/AgileFlow"/>
+            <property name="javax.persistence.jdbc.user" value="postgres"/>
+            <property name="javax.persistence.jdbc.password" value="02052004"/>
+            <property name="javax.persistence.jdbc.driver" value="org.postgresql.Driver"/>
+            <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
+            <property name="hibernate.hbm2ddl.auto" value="update"/>
+            <property name="hibernate.show_sql" value="true"/>
+            <property name="hibernate.format_sql" value="true"/>
+            <property name="hibernate.use_sql_comments" value="true"/>
+            <property name="org.hibernate.SQL" value="DEBUG"/>
+            <property name="org.hibernate.type" value="TRACE"/>
+        </properties>
+    </persistence-unit>
+    <!-- Persistence Unit для лабораторной работы 4 -->
+    <persistence-unit name="Lab4PU" transaction-type="RESOURCE_LOCAL">
+        <class>ru.sfedu.agileflow.lab4.setcollection.Task</class>
+        <class>ru.sfedu.agileflow.lab4.listcollection.Task</class>
+        <class>ru.sfedu.agileflow.lab4.mapcollection.Task</class>
+        <class>ru.sfedu.agileflow.lab4.componentset.Task</class>
+        <class>ru.sfedu.agileflow.lab4.componentset.TaskAttachment</class>
+        <class>ru.sfedu.agileflow.lab4.componentmap.Task</class>
+        <class>ru.sfedu.agileflow.lab4.componentmap.TaskAttachment</class>
+        <exclude-unlisted-classes>true</exclude-unlisted-classes>
+        <properties>
+            <property name="javax.persistence.jdbc.url" value="jdbc:postgresql://localhost:5432/AgileFlow"/>
+            <property name="javax.persistence.jdbc.user" value="postgres"/>
+            <property name="javax.persistence.jdbc.password" value="02052004"/>
+            <property name="javax.persistence.jdbc.driver" value="org.postgresql.Driver"/>
+            <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
+            <property name="hibernate.hbm2ddl.auto" value="update"/>
+            <property name="hibernate.show_sql" value="true"/>
+            <property name="hibernate.format_sql" value="true"/>
+            <property name="hibernate.use_sql_comments" value="true"/>
+            <property name="org.hibernate.SQL" value="DEBUG"/>
+            <property name="org.hibernate.type" value="TRACE"/>
+        </properties>
+    </persistence-unit>
+    <!-- Persistence Unit для лабораторной работы 5 -->
+    <persistence-unit name="Lab5PU" transaction-type="RESOURCE_LOCAL">
+        <class>ru.sfedu.agileflow.lab5.Project</class>
+        <class>ru.sfedu.agileflow.lab5.User</class>
+        <class>ru.sfedu.agileflow.lab5.Sprint</class>
+        <class>ru.sfedu.agileflow.lab5.Task</class>
+        <class>ru.sfedu.agileflow.lab5.Retrospective</class>
+        <class>ru.sfedu.agileflow.lab5.UserProfile</class>
+        <exclude-unlisted-classes>true</exclude-unlisted-classes>
+        <properties>
+            <property name="javax.persistence.jdbc.url" value="jdbc:postgresql://localhost:5432/AgileFlow"/>
+            <property name="javax.persistence.jdbc.user" value="postgres"/>
+            <property name="javax.persistence.jdbc.password" value="02052004"/>
+            <property name="javax.persistence.jdbc.driver" value="org.postgresql.Driver"/>
+            <property name="hibernate.dialect" value="org.hibernate.dialect.PostgreSQLDialect"/>
+            <property name="hibernate.hbm2ddl.auto" value="update"/>
+            <property name="hibernate.show_sql" value="true"/>
+            <property name="hibernate.format_sql" value="true"/>
+            <property name="hibernate.use_sql_comments" value="true"/>
+            <property name="org.hibernate.SQL" value="DEBUG"/>
+            <property name="org.hibernate.type" value="TRACE"/>
         </properties>
     </persistence-unit>
 </persistence>
